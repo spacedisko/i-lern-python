@@ -2,9 +2,11 @@ from flask import Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
-from werkzeug import generate_password_hash, check_password_hash
+from werkzeug import check_password_hash, generate_password_hash
+import werkzeug.security
 from datetime import datetime
 
+USER_FOLDER = '/data/userimages'
 
 # imports are usually done in:
 # import python-builtin
@@ -27,12 +29,47 @@ from datetime import datetime
 #                    url_for,
 #                    )
 
-
 app = Flask(__name__)
 app.secret_key = 'jEw9iS6A3qUeg4oYl7Nel0rud2ceFf2anS4oT6vO9hiv1p'
 # space between variable and square brack isnt a good idea
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test2.db'
+app.config['UPLOAD_FOLDER'] = USER_FOLDER
 db = SQLAlchemy(app)
+
+class File(db.Model):
+    """This is a file object"""
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(24))
+
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    author = db.relationship('User', foreign_keys="File.author_id", backref=db.backref('files', lazy='dynamic'))
+
+    def __init__(self, filename, author, allowed_extensions):
+        self.filename = filename
+        self.type = type
+        self.author = author
+        self.allowed_extensions = allowed_extensions
+
+    def __repr__(self):
+        return '<File %r by %r' % (self.filename, self.author)
+
+    def upload(self, file):
+        filename = secure_filename(file.filename)
+        prefix,ext = filename.rsplit('.', 1) # if a file is uploaded with no extension then ur fuxked mate.
+        if ext.lower() in self.allowed_extensions:
+            file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], "%s.%s" % (werkzeug.security.pbkdf2hex(prefix, keylen=32),ext)))
+        else:
+            return "File extension is wack. You can upload %s" % self.allowed_extensions
+
+class Image(File):
+
+    def __init__(self, filename, author):
+        super(Image,self).__init__(self, filename, author)
+        self.filename = filename
+        self.allowed_extensions = {'png','jpg','gif','jpeg'}
+
+    author = db.relationship('User', foreign_keys="Image.author_id", backref=db.backref('images', lazy='dynamic'))
 
 @app.cli.command('initdb')
 def initdb_command():
@@ -55,6 +92,8 @@ class User(db.Model):
     username = db.Column(db.String(50), index=True, unique=True)
     password = db.Column(db.String(50))
     join_date = db.Column(db.DateTime)
+    
+    avatar_id = db.Column(db.Integer, db.ForeignKey('image.id'))
 
     def __init__(self, username, password, join_date=None):
         self.username = username
@@ -67,7 +106,7 @@ class User(db.Model):
         return cls.query.filter_by(username=username).first()
 
     def __repr__(self):
-        # usually <User: %s>
+        # usually <User: %s>, but it's in the dox...
         return '<User %r>' % self.username
 
 class Post(db.Model):
@@ -87,8 +126,6 @@ class Post(db.Model):
         self.message = message
         self.author = author
         self.recipient = recipient
-        # might be worth splitting this into a function since youve
-        # used it twice. something like ensure_date(date)
         self.message_date = ensure_date(message_date)
 
     @classmethod
