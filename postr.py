@@ -45,23 +45,29 @@ class File(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', foreign_keys="File.author_id", backref=db.backref('files', lazy='dynamic'))
 
-    def __init__(self, filename, author, allowed_extensions):
+    def __init__(self, filename, author): # allowed_extensions
         self.filename = filename
         self.type = type
         self.author = author
-        self.allowed_extensions = allowed_extensions
+        # self.allowed_extensions = allowed_extensions
 
     def __repr__(self):
         return '<File %r by %r' % (self.filename, self.author)
 
-    def upload(self, file):
+    @classmethod
+    def upload(cls, file, author):
         filename = secure_filename(file.filename)
         prefix,ext = filename.rsplit('.', 1) # if a file is uploaded with no extension then ur fuxked mate.
-        if ext.lower() in self.allowed_extensions:
-            file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], "%s.%s" % (werkzeug.security.pbkdf2hex(prefix, keylen=32),ext)))
-        else:
-            return "File extension is wack. You can upload %s" % self.allowed_extensions
-
+        # if ext.lower() in self.allowed_extensions:
+        #     file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], "%s.%s" % (werkzeug.security.pbkdf2hex(prefix, keylen=32),ext)))
+        # else:
+        #     return "File extension is wack. You can upload %s" % self.allowed_extensions
+        secure_filename = "%s.%s" % (werkzeug.security.pbkdf2hex(prefix, keylen=32),ext)
+        file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], secure_filename))
+        file_model = cls(secure_filename, author)
+        db.session.add()
+        db.session.commit()
+        return file_model
     __mapper_args__ = {
         'polymorphic_on':type,
         'polymorphic_identity':'file'
@@ -198,7 +204,7 @@ def register():
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    pass
+    file = Image.upload(request.files['input_avatar'], g.user)
     return redirect(url_for('dashboard', username=g.user.username))
 
 @app.route('/<username>/post', methods=['POST'])
