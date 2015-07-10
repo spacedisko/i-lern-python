@@ -16,7 +16,7 @@
                 <img src="{{ url_for('')}}"/>
             {% endif %}
             <p>Welcome <a href="{{ url_for('dashboard', username=g.user.username)}}">{{g.user.username}}</a> | <a href="/logout">Logout</a></p>
-            <form class="inputs" id="uploadimage" action="{{url_for('upload')}}" method="post">
+            <form class="inputs" id="uploadimage" action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
                 <p>
                     <input type="file" name="input_avatar" value="Upload Avatar"/>
                     <input type="submit" value="Update Avatar"/>

@@ -47,42 +47,38 @@ class File(db.Model):
 
     def __init__(self, filename, author): # allowed_extensions
         self.filename = filename
-        self.type = type
         self.author = author
-        # self.allowed_extensions = allowed_extensions
 
     def __repr__(self):
         return '<File %r by %r' % (self.filename, self.author)
 
     @classmethod
     def upload(cls, file, author):
-        filename = secure_filename(file.filename)
-        prefix,ext = filename.rsplit('.', 1) # if a file is uploaded with no extension then ur fuxked mate.
-        # if ext.lower() in self.allowed_extensions:
-        #     file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], "%s.%s" % (werkzeug.security.pbkdf2hex(prefix, keylen=32),ext)))
-        # else:
-        #     return "File extension is wack. You can upload %s" % self.allowed_extensions
-        secure_filename = "%s.%s" % (werkzeug.security.pbkdf2hex(prefix, keylen=32),ext)
+        prefix,ext = file.filename.rsplit('.', 1) # if a file is uploaded with no extension then ur fuxked mate.
+        if ext.lower() in cls.allowed_extensions:
+            file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], "%s.%s" % (werkzeug.security.pbkdf2hex(prefix, keylen=32),ext)))
+        else:
+            return "File extension is wack. You can upload %s" % cls.allowed_extensions
+        secure_filename = "%s.%s" % (werkzeug.security.pbkdf2_hex(prefix, keylen=32, salt=app.secret_key),ext)
         file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], secure_filename))
         file_model = cls(secure_filename, author)
-        db.session.add()
+        db.session.add(file_model)
         db.session.commit()
         return file_model
     __mapper_args__ = {
-        'polymorphic_on':type,
+        'polymorphic_on':'type',
         'polymorphic_identity':'file'
     }
 
 
 class Image(File):
     __tablename__ = 'image'
-
+    allowed_extensions = {'png','jpg','gif','jpeg'}
     id = db.Column(db.Integer, db.ForeignKey('file.id'), primary_key=True)
 
     def __init__(self, filename, author):
-        super(Image,self).__init__(self, filename, author)
+        super(Image,self).__init__(filename, author)
         self.filename = filename
-        self.allowed_extensions = {'png','jpg','gif','jpeg'}
 
     __mapper_args__ = {
         'polymorphic_identity':'image'
@@ -195,16 +191,20 @@ def dashboard(username):
 def register():
     if request.method == 'POST':
         # https://docs.python.org/3/library/html.html#html.escape
-        new_user = User(request.form['register_username'], generate_password_hash(request.form['register_password'], method='pbkdf2:sha256', salt_length=8))
+        new_user = User(request.form['register_username'], generate_password_hash(request.form['register_password'], method='pbkdf2:sha256'))
         db.session.add(new_user)
         db.session.commit()
-        # escape here too. id do like username = html.escape(request.form[...])
+        # escape here too. id do like username = html.escape(request.form[...])salt=app.secret_key
         flash("You can now log in as %s" % request.form['register_username'])
         return redirect(url_for('home'))
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    file = Image.upload(request.files['input_avatar'], g.user)
+    print('doge is cute')
+    image_upload = request.files.get('input_avatar','')
+    print(image_upload)
+    file = Image.upload(image_upload, g.user)
+    print(file)
     return redirect(url_for('dashboard', username=g.user.username))
 
 @app.route('/<username>/post', methods=['POST'])
