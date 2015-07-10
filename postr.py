@@ -200,9 +200,7 @@ def register():
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    print('doge is cute')
     image_upload = request.files.get('input_avatar','')
-    print(image_upload)
     file = Image.upload(image_upload, g.user)
     print(file)
     return redirect(url_for('dashboard', username=g.user.username))
