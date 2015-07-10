@@ -56,15 +56,15 @@ class File(db.Model):
     def upload(cls, file, author):
         prefix,ext = file.filename.rsplit('.', 1) # if a file is uploaded with no extension then ur fuxked mate.
         if ext.lower() in cls.allowed_extensions:
-            file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], "%s.%s" % (werkzeug.security.pbkdf2hex(prefix, keylen=32),ext)))
+            secure_filename = "%s.%s" % (werkzeug.security.pbkdf2_hex(prefix, keylen=32, salt=app.secret_key),ext)
+            file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], secure_filename))
+            file_model = cls(secure_filename, author)
+            db.session.add(file_model)
+            db.session.commit()
+            return file_model
         else:
             return "File extension is wack. You can upload %s" % cls.allowed_extensions
-        secure_filename = "%s.%s" % (werkzeug.security.pbkdf2_hex(prefix, keylen=32, salt=app.secret_key),ext)
-        file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], secure_filename))
-        file_model = cls(secure_filename, author)
-        db.session.add(file_model)
-        db.session.commit()
-        return file_model
+
     __mapper_args__ = {
         'polymorphic_on':'type',
         'polymorphic_identity':'file'
