@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+	{% block head %}
+	<link href='http://fonts.googleapis.com/css?family=Chivo:400,400italic,900,900italic' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="https://necolas.github.io/normalize.css/3.0.2/normalize.css">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css.css') }}">
+
+	<title>{% block title %}{% endblock %} - PostR</title>
+	{% endblock %}
+</head>
+<body>
+	<div id="content"> {% block content %}{% endblock %}</div>
+	<div id="footer">
+		{% block footer %}
+
+		{% endblock %}
+	</div>
+
+</body>
+</html> 

@@ -1,0 +1,119 @@
+.clearfix:after, .wrapper:after {
+  content: "";
+  display: table;
+  clear: both; }
+
+*,
+*:after,
+*:before {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box; }
+
+html, body {
+  padding: 0;
+  margin: 0px !important;
+  border: 0; }
+
+html {
+  background: #f3f3f3; }
+
+body {
+  font: 16px "Chivo", "Helvetica", "Arial", sans-serif;
+  color: #373737; }
+
+.flashes {
+  position: absolute;
+  width: 100%;
+  margin: 0;
+  padding: 32px;
+  background: rgba(40, 111, 255, 0.85);
+  list-style-type: none; }
+  .flashes li {
+    color: white; }
+
+.wrapper {
+  height: 100%;
+  list-style-type: none;
+  padding: 16px;
+  margin: 0; }
+
+.formwrapper {
+  padding: 16px;
+  width: 50%;
+  float: left; }
+
+.inputs input {
+  background-color: white;
+  border: 0px;
+  border-top-width: 0px;
+  display: block;
+  padding: 8px;
+  width: 100%;
+  border-bottom: 1px solid #ccc; }
+
+.inputs input:active {
+  outline: 0px;
+  border: 0px; }
+
+input.btn {
+  margin-top: 8px;
+  background-color: #ffcc00;
+  color: white; }
+
+h1, h2, h3, h4, h5, h6, p {
+  font-weight: normal;
+  margin-top: 0; }
+
+.posts ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none; }
+  .posts ul li {
+    display: block;
+    padding: 16px;
+    background-color: white;
+    box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.15);
+    margin-bottom: 16px; }
+
+.animated {
+  -webkit-animation-duration: 3s;
+  animation-duration: 3s;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+  -webkit-animation-timing-function: ease;
+  animation-timing-function: ease; }
+
+@-webkit-keyframes fadeInDown {
+  0% {
+    opacity: 0;
+    -webkit-transform: translateY(-20px); }
+  12% {
+    opacity: 1;
+    -webkit-transform: translateY(0); }
+  75% {
+    opacity: 1;
+    -webkit-transform: translateY(0); }
+  100% {
+    opacity: 0;
+    -webkit-transform: translateY(-100%);
+    display: none; } }
+@keyframes fadeInDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px); }
+  12% {
+    opacity: 1;
+    transform: translateY(0); }
+  75% {
+    opacity: 1;
+    transform: translateY(0); }
+  100% {
+    opacity: 0;
+    -webkit-transform: translateY(-100%);
+    display: none; } }
+.fadeInDown {
+  -webkit-animation-name: fadeInDown;
+  animation-name: fadeInDown; }
+
+/*# sourceMappingURL=css.css.map */

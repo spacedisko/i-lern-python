@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flashes animated fadeInDown">
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <div class="posts">
+        {% if g.user %}
+            <h1>Welcome <a href="{{ url_for('dashboard', username=g.user.username )}}">{{g.user.username}}</a></h1>
+        {% endif %}
+        </ul>
+        {% if not g.user %}
+            <div class="formwrapper">
+                <form class="inputs" id="login" method="post">
+                    <p><input type="text" name="username" size="80" value="{{ form.username|d('') }}" placeholder="Username"><!--
+                    --><input type="password" name="password" size="80" placeholder="Password"><!--
+                    --><input class="btn" type="submit" value="Login">
+                    </p>
+                </form>
+            </div>
+            <div class="formwrapper register">
+                <form class="inputs" id="register" action="{{ url_for('register') }}" method="post">
+                    <p><input type="text" name="register_username" size="80" placeholder="Username"><!--
+                    --><input type="password" name="register_password" size="80" placeholder="Password"><!--
+                    --><input class="btn" type="submit" value="Register">
+                    </p>
+                </form>
+            </div>
+        {% endif %}
+        {% if g.user %}
+            <a href="/logout">Logout</a>  
+        {% endif %}      
+    </div>
+{% endblock %}

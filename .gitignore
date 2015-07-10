@@ -1,0 +1,6 @@
+__pycache__/
+.ruby-version
+*.pyc
+.DS_STORE
+
+*.scssc

@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+{% block title %}{{username.username}}{% endblock %}
+{% block content %}
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flashes animated fadeInDown">
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <div class="wrapper">
+        {% if g.user %}
+            <p>Welcome <a href="{{ url_for('dashboard', username=g.user.username)}}">{{g.user.username}}</a> | <a href="/logout">Logout</a></p>
+        {% endif %}
+        <h1>{{ username.username }}'s Feed</h1>
+        {% if g.user %}
+            <div class="formwrapper">
+                <form class="inputs" id="post" action="{{url_for('post', username=username.username)}}" method="post">
+                    <p><input type="text" name="input_message" size="80" placeholder="Tell us how you really feel…"/></p>
+                    <input type="submit" value="Post Dat"/>
+                </form>
+            </div>
+        {% endif %}
+        {% if posts %}
+        <div class="formwrapper posts">
+            <ul>
+            {% for post in posts %}
+                <li class="post">
+                    <h2 class="post-message">{{post.message}}</h2>
+                    <span class="post-meta">
+                        <span class="post-meta-date"><a href="{{ url_for('single', post_id=post.id)}}">{{ post.message_date }}</a>
+                        {% if g.user.id == post.recipient_id %}
+                            <a href="{{ url_for('delete_post', post_id=post.id) }}" value="&times;">&times;</a></span>
+                        {% endif %}
+                        <span class="post-meta-username">{{ post.author.username }}</span>
+                    </span>
+                </li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+        </div>
+    </div>
+    {% if users %}
+    <div class="wrapper">
+        <ul>
+        {% for user in users %}
+            <li class="post">
+                <a href="{{ url_for('dashboard', username=user.username) }}">{{ user.username }}</a> <a href="{{ url_for('delete_user', username=user.username) }}">&times;</a>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+{% endblock %}
