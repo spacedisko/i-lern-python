@@ -54,6 +54,7 @@ class File(db.Model):
 
     @classmethod
     def upload(cls, file, author):
+        print(file)
         prefix,ext = file.filename.rsplit('.', 1) # if a file is uploaded with no extension then ur fuxked mate.
         if ext.lower() in cls.allowed_extensions:
             secure_filename = "%s.%s" % (werkzeug.security.pbkdf2_hex(prefix, keylen=32, salt=app.secret_key),ext)
@@ -61,6 +62,7 @@ class File(db.Model):
             file_model = cls(secure_filename, author)
             db.session.add(file_model)
             db.session.commit()
+            flash('File uploaded!')
             return file_model
         else:
             return "File extension is wack. You can upload %s" % cls.allowed_extensions
@@ -198,11 +200,10 @@ def register():
         flash("You can now log in as %s" % request.form['register_username'])
         return redirect(url_for('home'))
 
-@app.route('/upload', methods=['POST'])
-def upload():
+@app.route('/new/avatar', methods=['POST'])
+def new_avatar():
     image_upload = request.files.get('input_avatar','')
     file = Image.upload(image_upload, g.user)
-    print(file)
     return redirect(url_for('dashboard', username=g.user.username))
 
 @app.route('/<username>/post', methods=['POST'])
