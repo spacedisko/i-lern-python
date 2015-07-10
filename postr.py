@@ -6,7 +6,7 @@ from werkzeug import check_password_hash, generate_password_hash
 import werkzeug.security
 from datetime import datetime
 
-USER_FOLDER = '/data/userimages'
+USER_FOLDER = 'user_data' # this is the world's most horrible thing, fix it later
 
 # imports are usually done in:
 # import python-builtin
@@ -38,10 +38,10 @@ db = SQLAlchemy(app)
 
 class File(db.Model):
     """This is a file object"""
-
+    __tablename__ = 'file'
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(24))
-
+    type = db.Column(db.String(50))
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', foreign_keys="File.author_id", backref=db.backref('files', lazy='dynamic'))
 
@@ -62,14 +62,27 @@ class File(db.Model):
         else:
             return "File extension is wack. You can upload %s" % self.allowed_extensions
 
+    __mapper_args__ = {
+        'polymorphic_on':type,
+        'polymorphic_identity':'file'
+    }
+
+
 class Image(File):
+    __tablename__ = 'image'
+
+    id = db.Column(db.Integer, db.ForeignKey('file.id'), primary_key=True)
 
     def __init__(self, filename, author):
         super(Image,self).__init__(self, filename, author)
         self.filename = filename
         self.allowed_extensions = {'png','jpg','gif','jpeg'}
 
-    author = db.relationship('User', foreign_keys="Image.author_id", backref=db.backref('images', lazy='dynamic'))
+    __mapper_args__ = {
+        'polymorphic_identity':'image'
+    }
+
+
 
 @app.cli.command('initdb')
 def initdb_command():
@@ -92,8 +105,8 @@ class User(db.Model):
     username = db.Column(db.String(50), index=True, unique=True)
     password = db.Column(db.String(50))
     join_date = db.Column(db.DateTime)
-    
-    avatar_id = db.Column(db.Integer, db.ForeignKey('image.id'))
+
+    avatar_id = db.Column(db.Integer, db.ForeignKey('file.id'))
 
     def __init__(self, username, password, join_date=None):
         self.username = username
@@ -182,6 +195,11 @@ def register():
         # escape here too. id do like username = html.escape(request.form[...])
         flash("You can now log in as %s" % request.form['register_username'])
         return redirect(url_for('home'))
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    pass
+    return redirect(url_for('dashboard', username=g.user.username))
 
 @app.route('/<username>/post', methods=['POST'])
 def post(username):  # post seems like a confusing name, because HTTP POST

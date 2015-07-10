@@ -1,9 +1,27 @@
 {% extends "layout.html" %}
 {% block title %}{{username.username}}{% endblock %}
 {% block content %}
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul class="flashes animated fadeInDown">
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
     <div class="wrapper">
         {% if g.user %}
+            {% if g.user.avatar_id %}
+                <img src="{{ url_for('')}}"/>
+            {% endif %}
             <p>Welcome <a href="{{ url_for('dashboard', username=g.user.username)}}">{{g.user.username}}</a> | <a href="/logout">Logout</a></p>
+            <form class="inputs" id="uploadimage" action="{{url_for('upload')}}" method="post">
+                <p>
+                    <input type="file" name="input_avatar" value="Upload Avatar"/>
+                    <input type="submit" value="Update Avatar"/>
+                </p>
+            </form>
         {% endif %}
         <h1>{{ username.username }}'s Feed</h1>
         {% if g.user %}
