@@ -265,3 +265,9 @@ def logout():
 def view_image():
     user = g.user
     return render_template('image.html', user=user)
+
+@app.route('/user_data/<filename>')
+def user_data(filename):
+    with app.open_resource('user_data/'+filename) as f:
+        contents = f.read()
+    return contents
