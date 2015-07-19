@@ -13,7 +13,7 @@
     <div class="wrapper">
         {% if g.user %}
             {% if g.user.avatar_id %}
-                <img src="{{ url_for('')}}"/>
+                <img src="{{ url_for('static', filename=g.user_data+'/'+username.avatar.filename) }}"/ alt="{{username.name}}'s Avatar"/>
             {% endif %}
             <p>Welcome <a href="{{ url_for('dashboard', username=g.user.username)}}">{{g.user.username}}</a> | <a href="/logout">Logout</a></p>
             <form class="inputs" id="uploadimage" action="{{ url_for('new_avatar') }}" method="post" enctype="multipart/form-data">

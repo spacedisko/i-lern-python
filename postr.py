@@ -7,7 +7,6 @@ import werkzeug.security
 from datetime import datetime
 
 USER_FOLDER = 'user_data' # this is the world's most horrible thing, fix it later
-
 # imports are usually done in:
 # import python-builtin
 #
@@ -30,11 +29,14 @@ USER_FOLDER = 'user_data' # this is the world's most horrible thing, fix it late
 #                    )
 
 app = Flask(__name__)
+
 app.secret_key = 'jEw9iS6A3qUeg4oYl7Nel0rud2ceFf2anS4oT6vO9hiv1p'
 # space between variable and square brack isnt a good idea
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test2.db'
 app.config['UPLOAD_FOLDER'] = USER_FOLDER
+
 db = SQLAlchemy(app)
+
 
 class File(db.Model):
     """This is a file object"""
@@ -50,7 +52,7 @@ class File(db.Model):
         self.author = author
 
     def __repr__(self):
-        return '<File %r by %r' % (self.filename, self.author)
+        return '<File %r by %r>' % (self.filename, self.author)
 
     @classmethod
     def upload(cls, file, author):
@@ -60,12 +62,14 @@ class File(db.Model):
             secure_filename = "%s.%s" % (werkzeug.security.pbkdf2_hex(prefix, keylen=32, salt=app.secret_key),ext)
             file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], secure_filename))
             file_model = cls(secure_filename, author)
-            db.session.add(file_model)
-            db.session.commit()
             flash('File uploaded!')
             return file_model
         else:
             return "File extension is wack. You can upload %s" % cls.allowed_extensions
+    @classmethod
+    def get_by_id(cls, id):
+
+        return cls.query.filter_by(id=id).first()
 
     __mapper_args__ = {
         'polymorphic_on':'type',
@@ -85,7 +89,6 @@ class Image(File):
     __mapper_args__ = {
         'polymorphic_identity':'image'
     }
-
 
 
 @app.cli.command('initdb')
@@ -111,7 +114,7 @@ class User(db.Model):
     join_date = db.Column(db.DateTime)
 
     avatar_id = db.Column(db.Integer, db.ForeignKey('file.id'))
-
+    avatar = db.relationship('File', foreign_keys="User.avatar_id")
     def __init__(self, username, password, join_date=None):
         self.username = username
         self.password = password
@@ -154,6 +157,7 @@ class Post(db.Model):
 
 @app.before_request
 def before_request():
+    g.user_data = USER_FOLDER
     g.user = None
     try:
         g.user = User.query.filter_by(username=session['username']).first()
@@ -179,6 +183,7 @@ def home():
 
 @app.route('/<username>')
 def dashboard(username):
+
     users = User.query.all()
     user = User.get_by_username(username)
     # "is" is better than == (ignatius fixed this now :3 ok)
@@ -202,8 +207,13 @@ def register():
 
 @app.route('/new/avatar', methods=['POST'])
 def new_avatar():
-    image_upload = request.files.get('input_avatar','')
+    image_upload = request.files.get('input_avatar' ,'')
     file = Image.upload(image_upload, g.user)
+    db.session.add(file)
+    db.session.commit()
+    g.user.avatar = file
+    db.session.add(g.user)
+    db.session.commit()
     return redirect(url_for('dashboard', username=g.user.username))
 
 @app.route('/<username>/post', methods=['POST'])
@@ -250,3 +260,8 @@ def logout():
     flash('Logged out')
     session.pop('username', None)
     return redirect(url_for('home'))
+
+@app.route('/userimage')
+def view_image():
+    user = g.user
+    return render_template('image.html', user=user)
