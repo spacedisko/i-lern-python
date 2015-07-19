@@ -12,9 +12,6 @@
 {% endwith %}
     <div class="wrapper">
         {% if g.user %}
-            {% if g.user.avatar_id %}
-                <img src="{{ url_for('user_data', filename=username.avatar.filename) }}"/ alt="{{username.name}}'s Avatar"/>
-            {% endif %}
             <p>Welcome <a href="{{ url_for('dashboard', username=g.user.username)}}">{{g.user.username}}</a> | <a href="/logout">Logout</a></p>
             <form class="inputs" id="uploadimage" action="{{ url_for('new_avatar') }}" method="post" enctype="multipart/form-data">
                 <p>
@@ -24,6 +21,11 @@
             </form>
         {% endif %}
         <h1>{{ username.username }}'s Feed</h1>
+        {% if username.avatar_id %}
+        <p>
+            <img src="{{ url_for('user_data', filename=username.avatar.filename) }}"/ alt="{{username.name}}'s Avatar"/>
+        </p>
+        {% endif %}       
         {% if g.user %}
             <div class="formwrapper">
                 <form class="inputs" id="post" action="{{url_for('post', username=username.username)}}" method="post">
