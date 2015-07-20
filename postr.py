@@ -175,7 +175,7 @@ def home():
             login_ok = (check_password_hash(get_user.password, user_input_pass))
             if login_ok:
                 session['username'] = user_input
-                return redirect(url_for('dashboard', username=user_input))
+                return redirect(url_for('dashboard', user=user_input))
                 flash("ORIGHT YEH. Logged in as %s" % user_input)
         else:
             flash("Incorrect username or password.")
@@ -192,7 +192,7 @@ def dashboard(username):
     else:
         posts = user.messages.order_by(desc(Post.message_date))
         # user, rather than username
-        return render_template('dashboard.html', username=user, posts=posts, users=users)
+        return render_template('dashboard.html', user=user, posts=posts, users=users)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -228,13 +228,13 @@ def post(username):  # post seems like a confusing name, because HTTP POST
         flash('Thx!')  # why in the middle of add and commit?
     else:
         flash('Say something better')
-    return redirect(url_for('dashboard', username=username))
+    return redirect(url_for('dashboard', user=username))
 
 @app.route('/post/<post_id>')
 def single(post_id):
     post = Post.get_by_id(post_id)
     user = post.author
-    return render_template('dashboard.html', username=user, posts=[post])
+    return render_template('dashboard.html', user=user, posts=[post])
 
 @app.route('/post/<post_id>/delete')
 def delete_post(post_id):

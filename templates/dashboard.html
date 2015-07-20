@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}{{username.username}}{% endblock %}
+{% block title %}{{user.username}}{% endblock %}
 {% block content %}
 {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -20,15 +20,15 @@
                 </p>
             </form>
         {% endif %}
-        <h1>{{ username.username }}'s Feed</h1>
-        {% if username.avatar_id %}
+        <h1>{{ user.username }}'s Feed</h1>
+        {% if user.avatar_id %}
         <p>
-            <img src="{{ url_for('user_data', filename=username.avatar.filename) }}"/ alt="{{username.name}}'s Avatar"/>
+            <img width="240" src="{{ url_for('user_data', filename=user.avatar.filename) }}"/ alt="{{user.name}}'s Avatar"/>
         </p>
         {% endif %}       
         {% if g.user %}
             <div class="formwrapper">
-                <form class="inputs" id="post" action="{{url_for('post', username=username.username)}}" method="post">
+                <form class="inputs" id="post" action="{{url_for('post', username=user.username)}}" method="post">
                     <p><input type="text" name="input_message" size="80" placeholder="Tell us how you really feel…"/></p>
                     <input type="submit" value="Post Dat"/>
                 </form>
