@@ -2,10 +2,11 @@ from flask import Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
-from werkzeug import generate_password_hash, check_password_hash
+from werkzeug import check_password_hash, generate_password_hash
+import werkzeug.security
 from datetime import datetime
 
-
+USER_FOLDER = 'user_data' # this is the world's most horrible thing, fix it later
 # imports are usually done in:
 # import python-builtin
 #
@@ -27,12 +28,68 @@ from datetime import datetime
 #                    url_for,
 #                    )
 
-
 app = Flask(__name__)
+
 app.secret_key = 'jEw9iS6A3qUeg4oYl7Nel0rud2ceFf2anS4oT6vO9hiv1p'
 # space between variable and square brack isnt a good idea
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test2.db'
+app.config['UPLOAD_FOLDER'] = USER_FOLDER
+
 db = SQLAlchemy(app)
+
+
+class File(db.Model):
+    """This is a file object"""
+    __tablename__ = 'file'
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(24))
+    type = db.Column(db.String(50))
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    author = db.relationship('User', foreign_keys="File.author_id", backref=db.backref('files', lazy='dynamic'))
+
+    def __init__(self, filename, author): # allowed_extensions
+        self.filename = filename
+        self.author = author
+
+    def __repr__(self):
+        return '<File %r by %r>' % (self.filename, self.author)
+
+    @classmethod
+    def upload(cls, file, author):
+        print(file)
+        prefix,ext = file.filename.rsplit('.', 1) # if a file is uploaded with no extension then ur fuxked mate.
+        if ext.lower() in cls.allowed_extensions:
+            secure_filename = "%s.%s" % (werkzeug.security.pbkdf2_hex(prefix, keylen=32, salt=app.secret_key),ext)
+            file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], secure_filename))
+            file_model = cls(secure_filename, author)
+            flash('File uploaded!')
+            return file_model
+        else:
+            return "File extension is wack. You can upload %s" % cls.allowed_extensions
+    @classmethod
+    def get_by_id(cls, id):
+
+        return cls.query.filter_by(id=id).first()
+
+    __mapper_args__ = {
+        'polymorphic_on':'type',
+        'polymorphic_identity':'file'
+    }
+
+
+class Image(File):
+    __tablename__ = 'image'
+    allowed_extensions = {'png','jpg','gif','jpeg'}
+    id = db.Column(db.Integer, db.ForeignKey('file.id'), primary_key=True)
+
+    def __init__(self, filename, author):
+        super(Image,self).__init__(filename, author)
+        self.filename = filename
+
+    __mapper_args__ = {
+        'polymorphic_identity':'image'
+    }
+
 
 @app.cli.command('initdb')
 def initdb_command():
@@ -56,6 +113,8 @@ class User(db.Model):
     password = db.Column(db.String(50))
     join_date = db.Column(db.DateTime)
 
+    avatar_id = db.Column(db.Integer, db.ForeignKey('file.id'))
+    avatar = db.relationship('File', foreign_keys="User.avatar_id")
     def __init__(self, username, password, join_date=None):
         self.username = username
         self.password = password
@@ -67,7 +126,7 @@ class User(db.Model):
         return cls.query.filter_by(username=username).first()
 
     def __repr__(self):
-        # usually <User: %s>
+        # usually <User: %s>, but it's in the dox...
         return '<User %r>' % self.username
 
 class Post(db.Model):
@@ -87,8 +146,6 @@ class Post(db.Model):
         self.message = message
         self.author = author
         self.recipient = recipient
-        # might be worth splitting this into a function since youve
-        # used it twice. something like ensure_date(date)
         self.message_date = ensure_date(message_date)
 
     @classmethod
@@ -100,6 +157,7 @@ class Post(db.Model):
 
 @app.before_request
 def before_request():
+    g.user_data = USER_FOLDER
     g.user = None
     try:
         g.user = User.query.filter_by(username=session['username']).first()
@@ -117,7 +175,7 @@ def home():
             login_ok = (check_password_hash(get_user.password, user_input_pass))
             if login_ok:
                 session['username'] = user_input
-                return redirect(url_for('dashboard', username=user_input))
+                return redirect(url_for('dashboard', user=user_input))
                 flash("ORIGHT YEH. Logged in as %s" % user_input)
         else:
             flash("Incorrect username or password.")
@@ -125,6 +183,7 @@ def home():
 
 @app.route('/<username>')
 def dashboard(username):
+
     users = User.query.all()
     user = User.get_by_username(username)
     # "is" is better than == (ignatius fixed this now :3 ok)
@@ -133,18 +192,29 @@ def dashboard(username):
     else:
         posts = user.messages.order_by(desc(Post.message_date))
         # user, rather than username
-        return render_template('dashboard.html', username=user, posts=posts, users=users)
+        return render_template('dashboard.html', user=user, posts=posts, users=users)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         # https://docs.python.org/3/library/html.html#html.escape
-        new_user = User(request.form['register_username'], generate_password_hash(request.form['register_password'], method='pbkdf2:sha256', salt_length=8))
+        new_user = User(request.form['register_username'], generate_password_hash(request.form['register_password'], method='pbkdf2:sha256'))
         db.session.add(new_user)
         db.session.commit()
-        # escape here too. id do like username = html.escape(request.form[...])
+        # escape here too. id do like username = html.escape(request.form[...])salt=app.secret_key
         flash("You can now log in as %s" % request.form['register_username'])
         return redirect(url_for('home'))
+
+@app.route('/new/avatar', methods=['POST'])
+def new_avatar():
+    image_upload = request.files.get('input_avatar' ,'')
+    file = Image.upload(image_upload, g.user)
+    db.session.add(file)
+    db.session.commit()
+    g.user.avatar = file
+    db.session.add(g.user)
+    db.session.commit()
+    return redirect(url_for('dashboard', username=g.user.username))
 
 @app.route('/<username>/post', methods=['POST'])
 def post(username):  # post seems like a confusing name, because HTTP POST
@@ -158,13 +228,13 @@ def post(username):  # post seems like a confusing name, because HTTP POST
         flash('Thx!')  # why in the middle of add and commit?
     else:
         flash('Say something better')
-    return redirect(url_for('dashboard', username=username))
+    return redirect(url_for('dashboard', user=username))
 
 @app.route('/post/<post_id>')
 def single(post_id):
     post = Post.get_by_id(post_id)
     user = post.author
-    return render_template('dashboard.html', username=user, posts=[post])
+    return render_template('dashboard.html', user=user, posts=[post])
 
 @app.route('/post/<post_id>/delete')
 def delete_post(post_id):
@@ -190,3 +260,14 @@ def logout():
     flash('Logged out')
     session.pop('username', None)
     return redirect(url_for('home'))
+
+@app.route('/userimage')
+def view_image():
+    user = g.user
+    return render_template('image.html', user=user)
+
+@app.route('/user_data/<filename>')
+def user_data(filename):
+    with app.open_resource('user_data/'+filename) as f:
+        contents = f.read()
+    return contents

@@ -1,34 +1,14 @@
 {% extends "layout.html" %}
-{% block title %}{{user.username}}{% endblock %}
+{% block title %}{{username.username}}'s Profile{% endblock %}
 {% block content %}
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <ul class="flashes animated fadeInDown">
-        {% for message in messages %}
-            <li>{{ message }}</li>
-        {% endfor %}
-        </ul>
-    {% endif %}
-{% endwith %}
     <div class="wrapper">
         {% if g.user %}
             <p>Welcome <a href="{{ url_for('dashboard', username=g.user.username)}}">{{g.user.username}}</a> | <a href="/logout">Logout</a></p>
-            <form class="inputs" id="uploadimage" action="{{ url_for('new_avatar') }}" method="post" enctype="multipart/form-data">
-                <p>
-                    <input type="file" name="input_avatar" value="Upload Avatar"/>
-                    <input type="submit" value="Update Avatar"/>
-                </p>
-            </form>
         {% endif %}
-        <h1>{{ user.username }}'s Feed</h1>
-        {% if user.avatar_id %}
-        <p>
-            <img width="240" src="{{ url_for('user_data', filename=user.avatar.filename) }}"/ alt="{{user.name}}'s Avatar"/>
-        </p>
-        {% endif %}       
+        <h1>{{ username.username }}'s Feed</h1>
         {% if g.user %}
             <div class="formwrapper">
-                <form class="inputs" id="post" action="{{url_for('post', username=user.username)}}" method="post">
+                <form class="inputs" id="post" action="{{url_for('post', username=username.username)}}" method="post">
                     <p><input type="text" name="input_message" size="80" placeholder="Tell us how you really feel…"/></p>
                     <input type="submit" value="Post Dat"/>
                 </form>
