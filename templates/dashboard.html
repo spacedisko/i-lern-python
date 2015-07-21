@@ -20,12 +20,24 @@
                 </p>
             </form>
         {% endif %}
-        <h1>{{ user.username }}'s Feed</h1>
-        {% if user.avatar_id %}
-        <p>
-            <img width="240" src="{{ url_for('user_data', filename=user.avatar.filename) }}"/ alt="{{user.avatar.username}}'s Avatar"/>
-        </p>
-        {% endif %}       
+        {% if user_images %}
+        <div class="">
+            {% for image in user_images %}
+                <a href="{{url_for('new_avatar', pid=image.id )}}"> 
+                    <img class="user-image" src="{{ url_for('user_data', filename=image.filename )}}" alt="{{image.filename}}"/>
+                </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <h1>
+        {% if user.avatar %}
+            <img class="user-image" src="{{ url_for('user_data', filename=user.avatar.filename) }}"/ alt="{{user.avatar.username}}'s Avatar"/>
+        {% endif %}  
+        {{ user.username }}
+        's Feed
+        </h1>
+     
         {% if g.user %}
             <div class="formwrapper">
                 <form class="inputs" id="post" action="{{url_for('post', username=user.username)}}" method="post">
@@ -39,43 +51,24 @@
             <ul>
             {% for post in posts %}
                 <li class="post">
-                <img class="user-image" src="{{ url_for('user_data', filename=post.author.avatar.filename) }}" alt="{{post.author.username}}'s Avatar"/>
-                    <h2 class="post-message">{{post.message}}</h2>
-                    <span class="post-meta">
-                        <span class="post-meta-username">{{ post.author.username }}</span>
-                        <span class="post-meta-date"><a href="{{ url_for('single', post_id=post.id)}}">{{ post.message_date }}</a>
-                        {% if g.user.id == post.recipient_id %}
-                            <a href="{{ url_for('delete_post', post_id=post.id) }}" value="&times;">&times;</a></span>
-                        {% endif %}
-                    </span>
+                    <div class="meh">
+                        <img class="user-image" src="{{ url_for('user_data', filename=post.author.avatar.filename) }}" alt="{{post.author.username}}'s Avatar"/>
+                    </div>
+                    <div class="tah">
+                        <h2 class="post-message">{{post.message}}</h2>
+                            <div class="post-meta">
+                                <a href="{{ url_for('dashboard', username=post.author.username) }}"class="post-meta-username">{{ post.author.username }}</a>
+                                <span class="post-meta-date"><a href="{{ url_for('single', post_id=post.id)}}">{{ post.message_date }}</a></span>
+                                {% if g.user.id == post.recipient_id %}
+                                    <a href="{{ url_for('delete_post', post_id=post.id) }}" value="&times;">&times;</a>
+                                {% endif %}
+                            </div>
+                    </div>
                 </li>
             {% endfor %}
             </ul>
-        {% endif %}
-        {% if images %}
-        </div>
-        <div class="formwrapper posts">
-            <ul>
-                {% for image in images %}
-                    <li class="image">
-                        <img src="{{ url_for('user_data', filename=image.filename )}}" alt="{{image.filename}}"/>
-                        <a href="{{url_for('new_avatar', pid=image.id )}}"> Make avatar </a>
-                    </li>
-                {% endfor %}
-            </ul>
         </div>
         {% endif %}
     </div>
-    {% if users %}
-    <div class="wrapper">
-        <ul>
-        {% for user in users %}
-            <li class="post">
-                <a href="{{ url_for('dashboard', username=user.username) }}">{{ user.username }}</a> <a href="{{ url_for('delete_user', username=user.username) }}">&times;</a>
-            </li>
-        {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
 
 {% endblock %}

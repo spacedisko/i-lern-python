@@ -189,11 +189,10 @@ def dashboard(username):
     if user is None:
         return abort(404)
     else:
-
-        images = File.get_by_author(author=user)
+        images = user.files.order_by(desc(File.id))
         posts = user.messages.order_by(desc(Post.message_date))
         # user, rather than username
-        return render_template('dashboard.html', user=user, images=images, posts=posts, users=users)
+        return render_template('dashboard.html', user=user, user_images=images, posts=posts, users=users)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -209,19 +208,20 @@ def register():
 @app.route('/new/avatar', methods=['POST'])
 @app.route('/new/avatar/<pid>', methods=['GET'])
 def new_avatar(pid=None):
-    image = request.files.get('input_avatar' ,'')
-    if image:
-        file = Image.upload(image, g.user)
+    def update_user_with_avatar():
+        db.session.add(g.user)
+        db.session.commit()
+    upload = request.files.get('input_avatar' ,'')
+    if upload:
+        file = Image.upload(upload, g.user)
         db.session.add(file)
         db.session.commit()
         g.user.avatar = file
-        db.session.add(g.user)
-        db.session.commit()
+        update_user_with_avatar()
     else:
         file = Image.get_by_id(pid)
         g.user.avatar = file
-        db.session.add(g.user)
-        db.session.commit()
+        update_user_with_avatar()
     return redirect(url_for('dashboard', username=g.user.username))
 
 @app.route('/<username>/post', methods=['POST'])

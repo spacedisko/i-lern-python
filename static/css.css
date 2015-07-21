@@ -75,6 +75,17 @@ h1, h2, h3, h4, h5, h6, p {
     background-color: white;
     box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.15);
     margin-bottom: 16px; }
+    .posts ul li h2 {
+      margin: 0; }
+
+.meh {
+  float: left; }
+
+.user-image {
+  margin-right: 12px;
+  object-fit: cover;
+  width: 48px;
+  height: 48px; }
 
 .animated {
   -webkit-animation-duration: 3s;
