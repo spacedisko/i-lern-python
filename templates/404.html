@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %}Not Found{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul class="flashes animated fadeInDown">
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
+<h1>404 Not Found</h1>
+{% endblock %}

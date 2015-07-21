@@ -68,9 +68,10 @@ class File(db.Model):
             return "File extension is wack. You can upload %s" % cls.allowed_extensions
     @classmethod
     def get_by_id(cls, id):
-
         return cls.query.filter_by(id=id).first()
-
+    @classmethod
+    def get_by_author(cls, author=None):
+        return cls.query.filter_by(author=author).all()
     __mapper_args__ = {
         'polymorphic_on':'type',
         'polymorphic_identity':'file'
@@ -175,7 +176,7 @@ def home():
             login_ok = (check_password_hash(get_user.password, user_input_pass))
             if login_ok:
                 session['username'] = user_input
-                return redirect(url_for('dashboard', user=user_input))
+                return redirect(url_for('dashboard', username=get_user.username))
                 flash("ORIGHT YEH. Logged in as %s" % user_input)
         else:
             flash("Incorrect username or password.")
@@ -183,16 +184,16 @@ def home():
 
 @app.route('/<username>')
 def dashboard(username):
-
     users = User.query.all()
     user = User.get_by_username(username)
-    # "is" is better than == (ignatius fixed this now :3 ok)
     if user is None:
         return abort(404)
     else:
+
+        images = File.get_by_author(author=user)
         posts = user.messages.order_by(desc(Post.message_date))
         # user, rather than username
-        return render_template('dashboard.html', user=user, posts=posts, users=users)
+        return render_template('dashboard.html', user=user, images=images, posts=posts, users=users)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -206,14 +207,21 @@ def register():
         return redirect(url_for('home'))
 
 @app.route('/new/avatar', methods=['POST'])
-def new_avatar():
-    image_upload = request.files.get('input_avatar' ,'')
-    file = Image.upload(image_upload, g.user)
-    db.session.add(file)
-    db.session.commit()
-    g.user.avatar = file
-    db.session.add(g.user)
-    db.session.commit()
+@app.route('/new/avatar/<pid>', methods=['GET'])
+def new_avatar(pid=None):
+    image = request.files.get('input_avatar' ,'')
+    if image:
+        file = Image.upload(image, g.user)
+        db.session.add(file)
+        db.session.commit()
+        g.user.avatar = file
+        db.session.add(g.user)
+        db.session.commit()
+    else:
+        file = Image.get_by_id(pid)
+        g.user.avatar = file
+        db.session.add(g.user)
+        db.session.commit()
     return redirect(url_for('dashboard', username=g.user.username))
 
 @app.route('/<username>/post', methods=['POST'])
@@ -228,7 +236,7 @@ def post(username):  # post seems like a confusing name, because HTTP POST
         flash('Thx!')  # why in the middle of add and commit?
     else:
         flash('Say something better')
-    return redirect(url_for('dashboard', user=username))
+    return redirect(url_for('dashboard', username=username))
 
 @app.route('/post/<post_id>')
 def single(post_id):
@@ -260,11 +268,6 @@ def logout():
     flash('Logged out')
     session.pop('username', None)
     return redirect(url_for('home'))
-
-@app.route('/userimage')
-def view_image():
-    user = g.user
-    return render_template('image.html', user=user)
 
 @app.route('/user_data/<filename>')
 def user_data(filename):
