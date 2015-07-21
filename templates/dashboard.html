@@ -1,15 +1,15 @@
 {% extends "layout.html" %}
 {% block title %}{{user.username}}{% endblock %}
 {% block content %}
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <ul class="flashes animated fadeInDown">
-        {% for message in messages %}
-            <li>{{ message }}</li>
-        {% endfor %}
-        </ul>
-    {% endif %}
-{% endwith %}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flashes animated fadeInDown">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
     <div class="wrapper">
         {% if g.user %}
             <p>Welcome <a href="{{ url_for('dashboard', username=g.user.username)}}">{{g.user.username}}</a> | <a href="/logout">Logout</a></p>
@@ -40,8 +40,9 @@
      
         {% if g.user %}
             <div class="formwrapper">
-                <form class="inputs" id="post" action="{{url_for('post', username=user.username)}}" method="post">
+                <form class="inputs" id="post" action="{{url_for('post', username=user.username)}}" method="post" enctype="multipart/form-data">
                     <p><input type="text" name="input_message" size="80" placeholder="Tell us how you really feel…"/></p>
+                    <p><input type="file" name="input_file"/>
                     <input type="submit" value="Post Dat"/>
                 </form>
             </div>
@@ -58,6 +59,13 @@
                         <h2 class="post-message">{{post.message}}</h2>
                             <div class="post-meta">
                                 <a href="{{ url_for('dashboard', username=post.author.username) }}"class="post-meta-username">{{ post.author.username }}</a>
+                                {% if post.attachments %}
+                                    {% for attachment in post.attachments %}
+                                    <div class="attachment">
+                                        <img src="{{ url_for('user_data', filename=attachment.file.filename)}}"/>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
                                 <span class="post-meta-date"><a href="{{ url_for('single', post_id=post.id)}}">{{ post.message_date }}</a></span>
                                 {% if g.user.id == post.recipient_id %}
                                     <a href="{{ url_for('delete_post', post_id=post.id) }}" value="&times;">&times;</a>

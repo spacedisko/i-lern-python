@@ -37,6 +37,21 @@ app.config['UPLOAD_FOLDER'] = USER_FOLDER
 
 db = SQLAlchemy(app)
 
+@app.cli.command('initdb')
+def initdb_command():
+    """Creates the database tables."""
+    db.drop_all()
+    db.create_all()
+    # think about when you use ' vs " and stick to it
+    # i use " for output that a user sees. some people
+    # use " to indicate a string that has variables in it
+    # (eg like a format string)
+    # also do you know about the logging module?
+    print("Initialized the database.")
+
+def ensure_date(date):
+    if date is None:
+        return datetime.utcnow()
 
 class File(db.Model):
     """This is a file object"""
@@ -44,19 +59,19 @@ class File(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(24))
     type = db.Column(db.String(50))
+
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', foreign_keys="File.author_id", backref=db.backref('files', lazy='dynamic'))
 
     def __init__(self, filename, author): # allowed_extensions
         self.filename = filename
         self.author = author
-
+        self.post = post
     def __repr__(self):
         return '<File %r by %r>' % (self.filename, self.author)
 
     @classmethod
     def upload(cls, file, author):
-        print(file)
         prefix,ext = file.filename.rsplit('.', 1) # if a file is uploaded with no extension then ur fuxked mate.
         if ext.lower() in cls.allowed_extensions:
             secure_filename = "%s.%s" % (werkzeug.security.pbkdf2_hex(prefix, keylen=32, salt=app.secret_key),ext)
@@ -91,23 +106,6 @@ class Image(File):
         'polymorphic_identity':'image'
     }
 
-
-@app.cli.command('initdb')
-def initdb_command():
-    """Creates the database tables."""
-    db.drop_all()
-    db.create_all()
-    # think about when you use ' vs " and stick to it
-    # i use " for output that a user sees. some people
-    # use " to indicate a string that has variables in it
-    # (eg like a format string)
-    # also do you know about the logging module?
-    print("Initialized the database.")
-
-def ensure_date(date):
-    if date is None:
-        return datetime.utcnow()
-
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), index=True, unique=True)
@@ -135,7 +133,6 @@ class Post(db.Model):
 
     message = db.Column(db.String(140))
     message_date = db.Column(db.DateTime)
-
     # oh do you really need to do this in sqlalchemy
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -143,11 +140,12 @@ class Post(db.Model):
     author = db.relationship('User', foreign_keys="Post.author_id", backref=db.backref('posts', lazy='dynamic'))
     recipient = db.relationship('User', foreign_keys="Post.recipient_id", backref=db.backref('messages', lazy='dynamic'))
 
-    def __init__(self, message, author, recipient, message_date=None):
+    def __init__(self, message, author, recipient, message_date=None, ):
         self.message = message
         self.author = author
         self.recipient = recipient
         self.message_date = ensure_date(message_date)
+
 
     @classmethod
     def get_by_id(cls, id):
@@ -155,6 +153,24 @@ class Post(db.Model):
 
     def __repr__(self):
         return'<Message: %r>' % self.message
+
+class Attachment(db.Model):
+
+    __tablename__ = 'attachment'
+    id = db.Column(db.Integer, primary_key=True)
+    file_id = db.Column(db.Integer, db.ForeignKey('file.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+
+    post = db.relationship('Post', foreign_keys="Attachment.post_id", backref=db.backref('attachments', lazy='dynamic'))
+    file = db.relationship('File', foreign_keys="Attachment.file_id", backref=db.backref('files', lazy='dynamic'))
+
+    def __init__(self, post, file):
+
+        self.post = post
+        self.file = file
+
+    def __repr__(self):
+        return'<Attachment %r on %r>' % (self.file, self.post)
 
 @app.before_request
 def before_request():
@@ -184,7 +200,6 @@ def home():
 
 @app.route('/<username>')
 def dashboard(username):
-    users = User.query.all()
     user = User.get_by_username(username)
     if user is None:
         return abort(404)
@@ -192,7 +207,7 @@ def dashboard(username):
         images = user.files.order_by(desc(File.id))
         posts = user.messages.order_by(desc(Post.message_date))
         # user, rather than username
-        return render_template('dashboard.html', user=user, user_images=images, posts=posts, users=users)
+        return render_template('dashboard.html', user=user, user_images=images, posts=posts)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -229,10 +244,18 @@ def post(username):  # post seems like a confusing name, because HTTP POST
     author = g.user
     recipient = User.get_by_username(username)
     # html escape PROBABLY doesnt matter here because jinja will handle it
+    attachment = request.files.get('input_file', '')
     post = Post(request.form['input_message'], author, recipient)
     if post.message is not '':
         db.session.add(post)
         db.session.commit()
+        if attachment:
+            image = Image.upload(attachment, g.user)
+            db.session.add(image)
+            db.session.commit()
+            attachment = Attachment(post, image)
+            db.session.add(attachment)
+            db.session.commit()
         flash('Thx!')  # why in the middle of add and commit?
     else:
         flash('Say something better')
