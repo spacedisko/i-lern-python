@@ -1,5 +1,0 @@
-{% extends "layout.html" %}
-{% block title %}Login{% endblock %}
-{% block content %}
-    {{user.avatar_id}}
-{% endblock %}
