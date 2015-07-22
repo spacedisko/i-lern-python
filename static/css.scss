@@ -18,52 +18,125 @@
   @include box-sizing(border-box);
 }
 
-$font-stack: 'Chivo', 'Helvetica','Arial',sans-serif;
+$font-stack: 'Source Sans Pro', 'Helvetica','Arial',sans-serif;
 $color: rgba(55,55,55,1);
-
+$brand-color: #0065FF;
+$brand-color: rgba(40, 111, 255, 1);
+h1,h2,h3,h4,h5,h6 {
+    margin-top: 0;
+}
 html, body {
 	padding:0;
-	margin:0px !important;
+	margin:0;
 	border:0;
 }
 html {
-	background: #f3f3f3;
+    font-weight:300;
+    -webkit-font-smoothing:antialiased;
+	background: $brand-color;
 }
 body {
+    padding-top:52px;
 	font: 16px $font-stack;
-	color: $color;
+	
 }
-
+a, a:visited {
+    text-decoration: none;
+    color: $brand-color;
+    &:hover {
+        color: rgba($brand-color,.5);
+    }
+}
+h1,h2,h3,h4,h5,h6 {
+    font-weight: 300;
+}
 .flashes {
-	position: absolute;
-	width:100%;
-	margin:0;
-	padding:32px;
-	background:rgba(40, 111, 255, .85);
+    z-index: 2;
+    top:0;
+    height:52px;
+    position: fixed;
+    padding:16px;
+    background: $brand-color;
+    width:100%;
+    margin:0;
 	list-style-type:none;
 	li {
+        display: block;
+        text-align: center;
 		color:white;
 	}
 }
+.site {
+    min-height:100vh;
+    background-color: #f3f3f3;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
 .wrapper {
+    width: 100%;
+    max-width:640px;
 	@extend .clearfix;
 	height:100%;
 	list-style-type: none;
 	padding:16px;
-	margin:0;
+	margin:0 auto;
+}
+
+.header {
+    font-weight:400;
+    height:52px;
+    display:flex;
+    flex-direction:row;
+    justify-content: space-between;
+    align-items:stretch;
+    align-content: center;
+    top:0;
+    position: fixed;
+    width:100%;
+    text-decoration: none;
+    background-color: $brand-color;
+    color: lighten($brand-color, 30%);
+    h1 {
+        margin:0;
+        font-size: 1em;
+    }
+    a, a:visited {
+        color: white;
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+    .logo {
+        padding: 16px;
+        color: $brand-color;
+        background-color: #f3f3f3;
+        display: block;
+        float:left;
+    }
+    .user-things {
+        padding:16px;
+    }
+}
+.profile-head {
+    .profile-avatar {
+        width:100%;
+        max-height:256px;
+        object-fit: cover;
+    }
+    text-align: center;
 }
 .formwrapper {
-	padding:16px;
-	width: 50%;
-	float: left;
+
 }
 
 .inputs input {
-	background-color: white;
+    font-weight:400;
+	background: none;
 	border:0px;
 	border-top-width:0px;
 	display:block;
-	padding:8px;
+	padding:8px 0px;
 	width:100%;
 	border-bottom:1px solid #ccc;
 }
@@ -71,16 +144,16 @@ body {
 	outline: 0px;
 	border:0px;
 }
-input.btn {
-	margin-top:8px;
-	background-color:#ffcc00;
-	color:white;
+.inputs input:focus {
+    outline:0px;
+    border-bottom:1px solid #333;
 }
-h1,h2,h3,h4,h5,h6,p{
-	font-weight:normal;
-	margin-top:0;
+input[type="button"], input[type="submit"] {
+    margin-top:16px;
+    background-color:$brand-color;
+    color:white;
+    line-height:2;
 }
-
 .posts ul {
 	margin:0;
 	padding:0;
@@ -88,56 +161,57 @@ h1,h2,h3,h4,h5,h6,p{
     img {
         max-width: 100%;
     }
-	li {
-		display: block;
+	li.post {
+		display: flex;
+        flex-direction: column;
 		padding:16px;
 		background-color:white;
 		box-shadow: 0px 0px 4px rgba(0,0,0,.15);
 		margin-bottom:16px;
         h2{
-            margin:0;
+            line-height: 1.5;
+            margin: 0;
+            margin-bottom: 8px; 
         }
 	}
 }
-.meh {
-    float:left;
+.post-head {
+    font-size:16px;
+    display: flex;
+    align-items:center;
+    margin-bottom:8px;
+    color: #ccc;
+    a.profile-link {
+        display: flex;
+        align-items: center;
+    }
+
+    a.delete {
+
+    }
+}
+.post-body {
+    flex: 1 auto;
+
 }
 .attachments {
-    margin:0;
+    margin-bottom:8px;
     display: flex;
-    flex-flow: column wrap;
-    align-items: flex-start;
-    align-content: stretch;
+    flex-flow: column;
     .attachment {
+        display: block;
         object-fit: cover;
         &:hover {
         }
     }
 }
-.user_images {
-    height:12px;
-    overflow: hidden;
-    display: flex;
-    flex-wrap: wrap;
-
-    &:hover {
-        position: relative;
-        height: auto;
-    }
-    a:hover:before{
-        position: absolute;
-        display: block;
-        color:blue;
-        content: 'Make avatar';
-    }
-}
 .user-image {
-    display: block;
-    margin:0;
-    margin-right:12px;
+    display: inline-block;
+    margin-right:16px;
     object-fit: cover;
-    width:48px;
-    height:48px;
+    width: 48px;
+    height: 48px;
+    margin-right:8px;
 }
 .animated { 
     -webkit-animation-duration: 3s; 

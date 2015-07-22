@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% block title %}Login{% endblock %}
 {% block content %}
+<div class="site">
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             <ul class="flashes animated fadeInDown">
@@ -10,11 +11,10 @@
             </ul>
         {% endif %}
     {% endwith %}
-    <div class="posts">
+    <div class="wrapper">
         {% if g.user %}
             <h1>Welcome <a href="{{ url_for('dashboard', username=g.user.username )}}">{{g.user.username}}</a></h1>
         {% endif %}
-        </ul>
         {% if not g.user %}
             <div class="formwrapper">
                 <form class="inputs" id="login" method="post">
@@ -37,4 +37,5 @@
             <a href="/logout">Logout</a>  
         {% endif %}      
     </div>
+</div>
 {% endblock %}

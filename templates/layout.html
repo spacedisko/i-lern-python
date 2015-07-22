@@ -2,7 +2,7 @@
 <html>
 <head>
 	{% block head %}
-	<link href='http://fonts.googleapis.com/css?family=Chivo:400,400italic,900,900italic' rel='stylesheet' type='text/css'>
+	<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,300italic' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" href="https://necolas.github.io/normalize.css/3.0.2/normalize.css">
 	<link rel="stylesheet" href="{{ url_for('static', filename='css.css') }}">
 
@@ -10,12 +10,20 @@
 	{% endblock %}
 </head>
 <body>
-	<div id="content"> {% block content %}{% endblock %}</div>
-	<div id="footer">
-		{% block footer %}
-
-		{% endblock %}
+	{% block header %}
+		<div class="header">
+		    <a href="{{ url_for('dashboard', username=g.user.name) }}" class="logo">PostR</a>
+		    <div class="user-things">
+		    {% if g.user %}
+		        Welcome <a href="{{ url_for('dashboard', username=g.user.username)}}">{{g.user.username}}</a> | <a href="{{ url_for('logout')}}">Logout</a>
+		    {% else %}
+		        Hello | <a href="{{ url_for('home') }}">Sign In</a>
+		    {% endif %}
+		    </div>
+		</div>
+	{% endblock %}
+	<div id="content">{% block content %}{% endblock %}</div>
+	<div id="footer">{% block footer %}{% endblock %}</div>
 	</div>
-
 </body>
 </html> 

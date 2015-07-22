@@ -1,82 +1,55 @@
 {% extends "layout.html" %}
 {% block title %}{{user.username}}{% endblock %}
 {% block content %}
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul class="flashes animated fadeInDown">
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-    <div class="wrapper">
-        {% if g.user %}
-            <p>Welcome <a href="{{ url_for('dashboard', username=g.user.username)}}">{{g.user.username}}</a> | <a href="/logout">Logout</a></p>
-            <!--<form class="inputs" id="uploadimage" action="{{ url_for('new_avatar') }}" method="post" enctype="multipart/form-data">
-                <p>
-                    <input type="file" name="input_avatar" value="Upload Avatar"/>
-                    <input type="submit" value="Update Avatar"/>
-                </p>
-            </form> -->
-        {% endif %}
-        {% if user_images %}
-        <div class="user_images">
-            {% for image in user_images %}
-                <a href="{{url_for('new_avatar', pid=image.id )}}"> 
-                    <img class="user-image" src="{{ url_for('user_data', filename=image.filename )}}" alt="{{image.filename}}"/>
-                </a>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <h1>
-        {% if user.avatar %}
-            <img class="user-image" src="{{ url_for('user_data', filename=user.avatar.filename) }}"/ alt="{{user.avatar.username}}'s Avatar"/>
-        {% endif %}  
-        {{ user.username }}
-        's Feed
-        </h1>
-     
-        {% if g.user %}
-            <div class="formwrapper">
-                <form class="inputs" id="post" action="{{url_for('post', username=user.username)}}" method="post" enctype="multipart/form-data">
-                    <div><input type="text" name="input_message" size="80" placeholder="Tell us how you really feel…"/></div>
-                    <div><input type="file" name="input_file" multiple=""/></div>
-                    <input type="submit" value="Post Dat"/>
-                </form>
+    <div class="site">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flashes animated fadeInDown">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        <div class="wrapper">
+            <!-- {% if user_images %}
+            <div class="user_images">
+                {% for image in user_images %}
+                    <a href="{{url_for('new_avatar', pid=image.id )}}"> 
+                        <img class="user-image" src="{{ url_for('user_data', filename=image.filename )}}" alt="{{image.filename}}"/>
+                    </a>
+                {% endfor %}
             </div>
-        {% endif %}
-        {% if posts %}
-        <div class="formwrapper posts">
-            <ul>
-            {% for post in posts %}
-                <li class="post">
-                    <div class="meh">
-                        <img class="user-image" src="{{ url_for('user_data', filename=post.author.avatar.filename) }}" alt="{{post.author.username}}'s Avatar"/>
-                    </div>
-                    <div class="tah">
-                        <h2 class="post-message">{{post.message}}</h2>
-                            <div class="post-meta">
-                                <a href="{{ url_for('dashboard', username=post.author.username) }}"class="post-meta-username">{{ post.author.username }}</a>
-                                {% if post.attachments %}
-                                    <div class="attachments">
-                                        {% for attachment in post.attachments %}
-                                            <img class="attachment" src="{{ url_for('user_data', filename=attachment.file.filename)}}"/>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                                <span class="post-meta-date"><a href="{{ url_for('single', post_id=post.id)}}">{{ post.message_date }}</a></span>
-                                {% if g.user.id == post.recipient_id %}
-                                    <a href="{{ url_for('delete_post', post_id=post.id) }}" value="&times;">&times;</a>
-                                {% endif %}
-                            </div>
-                    </div>
-                </li>
-            {% endfor %}
-            </ul>
+            {% endif %} -->
+            {% if user %}
+            <div class="profile-head">
+                <h1 class="profile-name">{{ user.username }}'s Feed</h1>
+                {% if user.avatar %}
+                    <img class="profile-avatar" src="{{ url_for('user_data', filename=user.avatar.filename) }}"/ alt="{{user.avatar.username}}'s Avatar"/>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% if g.user %}
+                <p class="formwrapper">
+                    <form class="inputs" id="post" action="{{url_for('post', username=user.username)}}" method="post" enctype="multipart/form-data">
+                        <div><input type="text" name="input_message" size="80" placeholder="Tell us how you really feel…"/></div>
+                        <div><input type="file" name="input_file" multiple=""/></div>
+                        <input type="submit" value="Post Dat"/>
+                    </form>
+                </p>
+            {% endif %}
+            {% if posts %}
+            <div class="formwrapper posts">
+                <ul>
+                {% for post in posts %}
+                    <li class="post">
+                        {% include "includes/post.html" %}
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 
 {% endblock %}
