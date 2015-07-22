@@ -41,8 +41,8 @@
         {% if g.user %}
             <div class="formwrapper">
                 <form class="inputs" id="post" action="{{url_for('post', username=user.username)}}" method="post" enctype="multipart/form-data">
-                    <p><input type="text" name="input_message" size="80" placeholder="Tell us how you really feel…"/></p>
-                    <p><input type="file" name="input_file"/>
+                    <div><input type="text" name="input_message" size="80" placeholder="Tell us how you really feel…"/></div>
+                    <div><input type="file" name="input_file" multiple=""/></div>
                     <input type="submit" value="Post Dat"/>
                 </form>
             </div>
@@ -60,11 +60,11 @@
                             <div class="post-meta">
                                 <a href="{{ url_for('dashboard', username=post.author.username) }}"class="post-meta-username">{{ post.author.username }}</a>
                                 {% if post.attachments %}
-                                    {% for attachment in post.attachments %}
-                                    <div class="attachment">
-                                        <img src="{{ url_for('user_data', filename=attachment.file.filename)}}"/>
+                                    <div class="attachments">
+                                        {% for attachment in post.attachments %}
+                                            <img class="attachment" src="{{ url_for('user_data', filename=attachment.file.filename)}}"/>
+                                        {% endfor %}
                                     </div>
-                                    {% endfor %}
                                 {% endif %}
                                 <span class="post-meta-date"><a href="{{ url_for('single', post_id=post.id)}}">{{ post.message_date }}</a></span>
                                 {% if g.user.id == post.recipient_id %}

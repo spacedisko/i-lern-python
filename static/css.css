@@ -83,6 +83,15 @@ h1, h2, h3, h4, h5, h6, p {
 .meh {
   float: left; }
 
+.attachments {
+  margin: 0;
+  display: flex;
+  flex-flow: column wrap;
+  align-items: flex-start;
+  align-content: stretch; }
+  .attachments .attachment {
+    object-fit: cover; }
+
 .user-image {
   margin-right: 12px;
   object-fit: cover;

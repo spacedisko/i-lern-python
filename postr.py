@@ -244,18 +244,20 @@ def post(username):  # post seems like a confusing name, because HTTP POST
     author = g.user
     recipient = User.get_by_username(username)
     # html escape PROBABLY doesnt matter here because jinja will handle it
-    attachment = request.files.get('input_file', '')
     post = Post(request.form['input_message'], author, recipient)
+    attachments = request.files.getlist('input_file')
+    print(attachments)
     if post.message is not '':
         db.session.add(post)
         db.session.commit()
-        if attachment:
-            image = Image.upload(attachment, g.user)
-            db.session.add(image)
-            db.session.commit()
-            attachment = Attachment(post, image)
-            db.session.add(attachment)
-            db.session.commit()
+        if attachments[0]:
+            for attachment in attachments:
+                file = Image.upload(attachment, g.user)
+                db.session.add(file)
+                db.session.commit()
+                attachment = Attachment(post, file)
+                db.session.add(attachment)
+                db.session.commit()
         flash('Thx!')  # why in the middle of add and commit?
     else:
         flash('Say something better')
