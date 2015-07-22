@@ -13,15 +13,15 @@
     <div class="wrapper">
         {% if g.user %}
             <p>Welcome <a href="{{ url_for('dashboard', username=g.user.username)}}">{{g.user.username}}</a> | <a href="/logout">Logout</a></p>
-            <form class="inputs" id="uploadimage" action="{{ url_for('new_avatar') }}" method="post" enctype="multipart/form-data">
+            <!--<form class="inputs" id="uploadimage" action="{{ url_for('new_avatar') }}" method="post" enctype="multipart/form-data">
                 <p>
                     <input type="file" name="input_avatar" value="Upload Avatar"/>
                     <input type="submit" value="Update Avatar"/>
                 </p>
-            </form>
+            </form> -->
         {% endif %}
         {% if user_images %}
-        <div class="">
+        <div class="user_images">
             {% for image in user_images %}
                 <a href="{{url_for('new_avatar', pid=image.id )}}"> 
                     <img class="user-image" src="{{ url_for('user_data', filename=image.filename )}}" alt="{{image.filename}}"/>

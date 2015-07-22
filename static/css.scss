@@ -114,7 +114,26 @@ h1,h2,h3,h4,h5,h6,p{
         }
     }
 }
+.user_images {
+    height:12px;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+
+    &:hover {
+        position: relative;
+        height: auto;
+    }
+    a:hover:before{
+        position: absolute;
+        display: block;
+        color:blue;
+        content: 'Make avatar';
+    }
+}
 .user-image {
+    display: block;
+    margin:0;
     margin-right:12px;
     object-fit: cover;
     width:48px;

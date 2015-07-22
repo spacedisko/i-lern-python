@@ -1,6 +1,15 @@
 {% extends "layout.html" %}
 {% block title %}Login{% endblock %}
 {% block content %}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flashes animated fadeInDown">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
     <div class="posts">
         {% if g.user %}
             <h1>Welcome <a href="{{ url_for('dashboard', username=g.user.username )}}">{{g.user.username}}</a></h1>

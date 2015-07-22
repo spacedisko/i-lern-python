@@ -196,7 +196,7 @@ def home():
                 flash("ORIGHT YEH. Logged in as %s" % user_input)
         else:
             flash("Incorrect username or password.")
-    return render_template('test.html', form=request.form)
+    return render_template('login.html', form=request.form)
 
 @app.route('/<username>')
 def dashboard(username):
