@@ -184,6 +184,8 @@ def before_request():
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
+    if g.user:
+        return redirect(url_for('dashboard', username=g.user.username))
     if request.method == 'POST':
         user_input = request.form.get('username', '')
         user_input_pass = request.form.get('password', '')
@@ -237,6 +239,7 @@ def new_avatar(pid=None):
         file = Image.get_by_id(pid)
         g.user.avatar = file
         update_user_with_avatar()
+        flash('Avatar changed!')
     return redirect(url_for('dashboard', username=g.user.username))
 
 @app.route('/<username>/post', methods=['POST'])
