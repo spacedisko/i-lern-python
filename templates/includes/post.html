@@ -1,7 +1,7 @@
 <div class="post-head">
     <a class="profile-link" href="{{ url_for('dashboard', username=post.author.username) }}">
     {% if user.avatar %}
-        <img class="user-image" src="{{ url_for('user_data', filename=post.author.avatar.filename) }}" alt="{{post.author.username}}'s Avatar"/>
+        <img class="user-image" src="{{ url_for('get_user_data', filename=post.author.avatar.filename) }}" alt="{{post.author.username}}'s Avatar"/>
     {% endif %}
     {{ post.author.username }}</a>&nbsp;says…
     {% if g.user.id == post.recipient_id %}
@@ -16,8 +16,14 @@
             {% if post.attachments %}
                 <div class="attachments">
                     {% for attachment in post.attachments %}
-                        <a href="{{url_for('new_avatar', pid=attachment.file.id )}}"> 
-                            <img class="attachment" src="{{ url_for('user_data', filename=attachment.file.filename)}}"/>
+                        <a href="
+                        {% if g.user == user %}
+                            {{url_for('new_avatar', id=attachment.file.id )}}
+                        {% else %}
+                            {{url_for('post')}}
+                        {% endif %}
+                        "> 
+                            <img class="attachment" src="{{ url_for('get_user_data', filename=attachment.file.filename)}}"/>
                         </a>
                     {% endfor %}
                 </div>

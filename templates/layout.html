@@ -2,14 +2,14 @@
 <html>
 <head>
 	{% block head %}
-	<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,300italic' rel='stylesheet' type='text/css'>
+	<link href='http://fonts.googleapis.com/css?family=Roboto:300,500,300italic' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" href="https://necolas.github.io/normalize.css/3.0.2/normalize.css">
 	<link rel="stylesheet" href="{{ url_for('static', filename='css.css') }}">
-
+	<script src="static/js/lib/require-2.1.4.js" data-main="static/js/main"></script>
 	<title>{% block title %}{% endblock %} - PostR</title>
 	{% endblock %}
 </head>
-<body>
+<body data-defaultimage="">
 	{% block header %}
 		<div class="header">
 		    <a href="{{ url_for('dashboard', username=g.user.name) }}" class="logo">PostR</a>

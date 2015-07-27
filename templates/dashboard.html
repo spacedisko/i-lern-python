@@ -11,32 +11,20 @@
                 </ul>
             {% endif %}
         {% endwith %}
-        <div class="wrapper">
-            <!-- {% if user_images %}
-            <div class="user_images">
-                {% for image in user_images %}
-                    <a href="{{url_for('new_avatar', pid=image.id )}}"> 
-                        <img class="user-image" src="{{ url_for('user_data', filename=image.filename )}}" alt="{{image.filename}}"/>
-                    </a>
-                {% endfor %}
-            </div>
-            {% endif %} -->
-            {% if user %}
-            <div class="profile-head">
-                <h1 class="profile-name">{{ user.username }}'s Feed</h1>
-                {% if user.avatar %}
-                    <img class="profile-avatar" src="{{ url_for('user_data', filename=user.avatar.filename) }}"/ alt="{{user.avatar.username}}'s Avatar"/>
-                {% endif %}
-            </div>
+        {% if user %}
+        <div class="profile-head">
+            {% if user.avatar %}
+                <div class="profile-avatar" style="background-image: url('..{{ url_for('get_user_data', filename=user.avatar.filename) }}')"/>
+                    <h1 class="profile-name">{{ user.username }}</h1>
+                </div>
+            {% else %}
+                <h1 class="profile-name">{{ user.username }}</h1>
             {% endif %}
-            {% if g.user %}
-                <p class="formwrapper">
-                    <form class="inputs" id="post" action="{{url_for('post', username=user.username)}}" method="post" enctype="multipart/form-data">
-                        <div><input type="text" name="input_message" size="80" placeholder="Tell us how you really feel…"/></div>
-                        <div><input type="file" name="input_file" multiple=""/></div>
-                        <input type="submit" value="Post Dat"/>
-                    </form>
-                </p>
+        </div>
+        {% endif %}
+        <div class="wrapper">
+            {% if g.user == user %}
+                {% include "includes/glitchr.html" %}
             {% endif %}
             {% if posts %}
             <div class="formwrapper posts">
