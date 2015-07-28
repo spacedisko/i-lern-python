@@ -14,6 +14,11 @@ My project thus far consists of an app called "Postr" which runs on Flask.
 Create the database:
 ```flask --app=postr initdb```
 
+Create directories:
+
+```mkdir user_data```
+```mkdir temp_data```
+
 Run with reload:
 ```flask --app=postr run --reload```
 
