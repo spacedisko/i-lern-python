@@ -26,8 +26,9 @@
             </div>
             <div class="formwrapper register">
                 <form class="inputs" id="register" action="{{ url_for('register') }}" method="post">
-                    <p><input type="text" name="register_username" size="80" placeholder="Username"><!--
-                    --><input type="password" name="register_password" size="80" placeholder="Password"><!--
+                    <p><input type="text" name="register_username" size="80" placeholder="Choose a unique username"><!--
+                    --><input type="text" name="register_email" size="80" placeholder="you@youremail.com"><!--
+                    --><input type="password" name="register_password" size="80" placeholder="Create a strong password"><!--
                     --><input class="btn" type="submit" value="Register">
                     </p>
                 </form>

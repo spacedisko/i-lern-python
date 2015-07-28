@@ -1,12 +1,14 @@
 from flask import Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash, safe_join, send_from_directory
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.mail import Mail, Message
 from sqlalchemy import desc
 from werkzeug import check_password_hash, generate_password_hash
 import werkzeug.security
 from datetime import datetime
 import base64
 import urllib.request
+import uuid
 
 USER_FOLDER = 'user_data' # this is the world's most horrible thing, fix it later
 TEMP_FOLDER = 'user_temp'
@@ -32,14 +34,19 @@ TEMP_FOLDER = 'user_temp'
 #                    url_for,
 #                    )
 
+
+
 app = Flask(__name__, static_folder='static')
+
 
 app.secret_key = 'jEw9iS6A3qUeg4oYl7Nel0rud2ceFf2anS4oT6vO9hiv1p'
 # space between variable and square brack isnt a good idea
+app.config.from_pyfile('mail.cfg')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test2.db'
 app.config['UPLOAD_FOLDER'] = USER_FOLDER
 app.config['TEMP_FOLDER'] = TEMP_FOLDER
 
+mail = Mail(app)
 db = SQLAlchemy(app)
 
 @app.cli.command('initdb')
@@ -133,16 +140,25 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), index=True, unique=True)
     password = db.Column(db.String(50))
+    email = db.Column(db.String(0), index=True, unique=True)
+    verified = db.Column(db.Boolean)
+    verification_code = db.Column(db.String(40))
     join_date = db.Column(db.DateTime)
 
     avatar_id = db.Column(db.Integer, db.ForeignKey('file.id'))
     avatar = db.relationship('File', foreign_keys="User.avatar_id")
-    def __init__(self, username, password, join_date=None):
+
+    def __init__(self, username, password, email, verification_code=None, join_date=None, verified=0):
         self.username = username
         self.password = password
+        self.email = email
+        self.verification_code = str(uuid.uuid4().hex)
         self.join_date = ensure_date(join_date)
+        self.verified = verified
 
-    # from doge
+    def verify(self, email, code):
+        pass
+
     @classmethod
     def get_by_username(cls, username):  
         return cls.query.filter_by(username=username).first()
@@ -214,11 +230,17 @@ def home():
         user_input_pass = request.form.get('password', '')
         if user_input is not None:
             get_user = User.get_by_username(user_input)
-            login_ok = (check_password_hash(get_user.password, user_input_pass))
+            print(get_user)
+            login_ok = (check_password_hash(get_user.password, user_input_pass)) and get_user.verified is True
+            print(get_user.verified)
             if login_ok:
                 session['username'] = user_input
-                return redirect(url_for('dashboard', username=get_user.username))
                 flash("ORIGHT YEH. Logged in as %s" % user_input)
+                return redirect(url_for('dashboard', username=get_user.username))
+
+            elif get_user.verified is False:
+                print('MATE CMON')
+                flash("You need to confirm your email…")
         else:
             flash("Incorrect username or password.")
     return render_template('login.html', form=request.form)
@@ -238,11 +260,14 @@ def dashboard(username):
 def register():
     if request.method == 'POST':
         # https://docs.python.org/3/library/html.html#html.escape
-        new_user = User(request.form['register_username'], generate_password_hash(request.form['register_password'], method='pbkdf2:sha256'))
+        new_user = User(request.form['register_username'],
+                        generate_password_hash(request.form['register_password'],method='pbkdf2:sha256'),
+                        request.form['register_email']
+                        )
         db.session.add(new_user)
         db.session.commit()
         # escape here too. id do like username = html.escape(request.form[...])salt=app.secret_key
-        flash("You can now log in as %s" % request.form['register_username'])
+        flash("An email has been sent to %s — You need to verify before signing in" % new_user.email )
         return redirect(url_for('home'))
 
 @app.route('/avatar', methods=['GET'])
@@ -335,3 +360,18 @@ def get_temp_data(filename):
 def glitch():
     return render_template('glitch.html')
 
+@app.route('/mail', methods=['GET'])
+def mail():
+    # http://localhost:5000/mail?confirm=blah@blah.com&code=12314823812038129381208319
+
+    if request.method == 'GET':
+        email_get = request.args.get('confirm')
+        code_get = request.args.get('code')
+
+        if code_get:
+            flash('Email Confirmed')
+            return redirect(url_for('home'))
+
+    # msg = Message("Hello",sender="from@postr.com", recipients=["test@test.test"])
+    # mail.send(msg)
+    return email_get
