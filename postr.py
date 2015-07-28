@@ -230,7 +230,7 @@ def dashboard(username):
         return abort(404)
     else:
         images = user.files.order_by(desc(File.id))
-        posts = user.messages.order_by(desc(Post.message_date))
+        posts = user.messages.order_by(desc(Post.message_date))[:8]
         # user, rather than username
         return render_template('dashboard.html', user=user, user_images=images, posts=posts)
 
@@ -290,8 +290,8 @@ def post(username):  # post seems like a confusing name, because HTTP POST
         flash('Say something better')
     return redirect(url_for('dashboard', username=username))
 
-@app.route('/post/<post_id>')
-def single(post_id):
+@app.route('/<author>/post/<post_id>')
+def single(post_id, author):
     post = Post.get_by_id(post_id)
     user = post.author
     return render_template('dashboard.html', user=user, posts=[post])
@@ -335,17 +335,3 @@ def get_temp_data(filename):
 def glitch():
     return render_template('glitch.html')
 
-@app.route('/decode', methods=['POST'])
-@app.route('/decode/<imgdata>/post')
-def decode(imgdata=None):
-    imgdata = request.form.get('image_data', '')
-    if imgdata:
-        tempfile = 'temp_' + g.user.username + '_' + werkzeug.security.pbkdf2_hex(imgdata, keylen=4, salt=app.secret_key) + '.png'
-        location = app.config['TEMP_FOLDER']
-        with open(safe_join(location, tempfile), 'wb') as f:
-            imgdata = urllib.request.url2pathname(imgdata)
-            decoded = base64.b64decode(imgdata)
-            f.write(decoded)
-        return render_template('image.html', filename=tempfile)
-    else:
-        return 'Nope!'

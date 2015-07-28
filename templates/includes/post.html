@@ -3,7 +3,7 @@
     {% if user.avatar %}
         <img class="user-image" src="{{ url_for('get_user_data', filename=post.author.avatar.filename) }}" alt="{{post.author.username}}'s Avatar"/>
     {% endif %}
-    {{ post.author.username }}</a>&nbsp;says…
+    {{ post.author.username }}</a>&nbsp;says at&nbsp;<a href="{{ url_for('single', author=post.author.username, post_id=post.id)}}">{{ post.message_date }}</a>
     {% if g.user.id == post.recipient_id %}
         <a href="{{ url_for('delete_post', post_id=post.id) }}" class="delete">&times;</a>
     {% endif %}
@@ -11,23 +11,19 @@
 
 <div class="post-body">
     <h2 class="post-message">{{post.message}}</h2>
-        <div class="post-meta">
-          
-            {% if post.attachments %}
-                <div class="attachments">
-                    {% for attachment in post.attachments %}
-                        <a href="
-                        {% if g.user == user %}
-                            {{url_for('new_avatar', id=attachment.file.id )}}
-                        {% else %}
-                            {{url_for('post')}}
-                        {% endif %}
-                        "> 
-                            <img class="attachment" src="{{ url_for('get_user_data', filename=attachment.file.filename)}}"/>
-                        </a>
-                    {% endfor %}
-                </div>
-            {% endif %}
-            <span class="post-meta-date"><a href="{{ url_for('single', post_id=post.id)}}">{{ post.message_date }}</a></span>
+    {% if post.attachments %}
+        <div class="attachments">
+            {% for attachment in post.attachments %}
+                <a href="
+                {% if g.user == user %}
+                    {{url_for('new_avatar', id=attachment.file.id )}}
+                {% else %}
+                    #
+                {% endif %}
+                "> 
+                    <img class="attachment" src="{{ url_for('get_user_data', filename=attachment.file.filename)}}"/>
+                </a>
+            {% endfor %}
         </div>
+    {% endif %}
 </div>

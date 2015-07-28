@@ -1,5 +1,11 @@
 <div class="formwrapper inputs">
-    <button id="cam-button" class="button" title="Take a photo">Capture Your Personal Brand Image</button>
+    <button id="cam-button" class="button" title="Take a photo">
+    {% if g.user == user %}
+        Capture Your Personal Brand Image
+    {% else %}
+        Influence Others…
+    {% endif %}
+    </button>
     <!-- <button id="export-button" class="button" title="save image to your computer">download image</button> -->
 </div>
 
