@@ -1,12 +1,16 @@
 from flask import Flask, request, session, g, redirect, url_for, \
-     abort, render_template, flash
+     abort, render_template, flash, safe_join, send_from_directory
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from werkzeug import check_password_hash, generate_password_hash
 import werkzeug.security
 from datetime import datetime
+import base64
+import urllib.request
 
 USER_FOLDER = 'user_data' # this is the world's most horrible thing, fix it later
+TEMP_FOLDER = 'user_temp'
+
 # imports are usually done in:
 # import python-builtin
 #
@@ -28,12 +32,13 @@ USER_FOLDER = 'user_data' # this is the world's most horrible thing, fix it late
 #                    url_for,
 #                    )
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 app.secret_key = 'jEw9iS6A3qUeg4oYl7Nel0rud2ceFf2anS4oT6vO9hiv1p'
 # space between variable and square brack isnt a good idea
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test2.db'
 app.config['UPLOAD_FOLDER'] = USER_FOLDER
+app.config['TEMP_FOLDER'] = TEMP_FOLDER
 
 db = SQLAlchemy(app)
 
@@ -67,9 +72,28 @@ class File(db.Model):
         self.filename = filename
         self.author = author
         self.post = post
+
     def __repr__(self):
         return '<File %r by %r>' % (self.filename, self.author)
 
+    def make_from_base_64(data):
+        secure_filename = werkzeug.security.pbkdf2_hex(data, keylen=4, salt=app.secret_key) + '.png'
+        with open(werkzeug.security.safe_join(app.config['TEMP_FOLDER'], secure_filename), 'wb') as f:
+            imgdata = urllib.request.url2pathname(data)
+            decoded = base64.b64decode(imgdata)
+            f.write(decoded)
+        return request.files.get(f.name)
+
+    @classmethod
+    def upload_from_base_64_data(cls, imgdata, author):
+        secure_filename = "%s.png" % (werkzeug.security.pbkdf2_hex(imgdata, keylen=32, salt=app.secret_key))
+        with open(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], secure_filename), 'wb') as f:
+            imgdata = urllib.request.url2pathname(imgdata)
+            decoded = base64.b64decode(imgdata)
+            f.write(decoded)
+        file_model = cls(secure_filename, author)
+        return file_model
+   
     @classmethod
     def upload(cls, file, author):
         prefix,ext = file.filename.rsplit('.', 1) # if a file is uploaded with no extension then ur fuxked mate.
@@ -77,7 +101,6 @@ class File(db.Model):
             secure_filename = "%s.%s" % (werkzeug.security.pbkdf2_hex(prefix, keylen=32, salt=app.secret_key),ext)
             file.save(werkzeug.security.safe_join(app.config['UPLOAD_FOLDER'], secure_filename))
             file_model = cls(secure_filename, author)
-            flash('File uploaded!')
             return file_model
         else:
             return "File extension is wack. You can upload %s" % cls.allowed_extensions
@@ -207,7 +230,7 @@ def dashboard(username):
         return abort(404)
     else:
         images = user.files.order_by(desc(File.id))
-        posts = user.messages.order_by(desc(Post.message_date))
+        posts = user.messages.order_by(desc(Post.message_date))[:8]
         # user, rather than username
         return render_template('dashboard.html', user=user, user_images=images, posts=posts)
 
@@ -222,24 +245,16 @@ def register():
         flash("You can now log in as %s" % request.form['register_username'])
         return redirect(url_for('home'))
 
-@app.route('/new/avatar', methods=['POST'])
-@app.route('/new/avatar/<pid>', methods=['GET'])
-def new_avatar(pid=None):
+@app.route('/avatar', methods=['GET'])
+def new_avatar(id=None):
     def update_user_with_avatar():
         db.session.add(g.user)
         db.session.commit()
-    upload = request.files.get('input_avatar' ,'')
-    if upload:
-        file = Image.upload(upload, g.user)
-        db.session.add(file)
-        db.session.commit()
-        g.user.avatar = file
-        update_user_with_avatar()
-    else:
-        file = Image.get_by_id(pid)
-        g.user.avatar = file
-        update_user_with_avatar()
-        flash('Avatar changed!')
+
+    file = Image.get_by_id(request.args.get('id', ''))
+    g.user.avatar = file
+    update_user_with_avatar()
+    flash('Avatar changed!')
     return redirect(url_for('dashboard', username=g.user.username))
 
 @app.route('/<username>/post', methods=['POST'])
@@ -249,10 +264,19 @@ def post(username):  # post seems like a confusing name, because HTTP POST
     # html escape PROBABLY doesnt matter here because jinja will handle it
     post = Post(request.form['input_message'], author, recipient)
     attachments = request.files.getlist('input_file')
-    print(attachments)
+    input_img_data = request.form['image_data']
     if post.message is not '':
         db.session.add(post)
         db.session.commit()
+        if input_img_data is not '':
+            file = Image.upload_from_base_64_data(input_img_data, g.user) # Hhhmmmm???
+            db.session.add(file)
+            db.session.commit()
+            attachment = Attachment(post, file)
+            db.session.add(attachment)
+            db.session.commit()
+            # file = Image.make_from_base_64(input_img_data)
+            print(file)
         if attachments[0]:
             for attachment in attachments:
                 file = Image.upload(attachment, g.user)
@@ -261,13 +285,13 @@ def post(username):  # post seems like a confusing name, because HTTP POST
                 attachment = Attachment(post, file)
                 db.session.add(attachment)
                 db.session.commit()
-        flash('Thx!')  # why in the middle of add and commit?
+        flash('Thx!')  
     else:
         flash('Say something better')
     return redirect(url_for('dashboard', username=username))
 
-@app.route('/post/<post_id>')
-def single(post_id):
+@app.route('/<author>/post/<post_id>')
+def single(post_id, author):
     post = Post.get_by_id(post_id)
     user = post.author
     return render_template('dashboard.html', user=user, posts=[post])
@@ -297,8 +321,17 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('home'))
 
-@app.route('/user_data/<filename>')
-def user_data(filename):
-    with app.open_resource('user_data/'+filename) as f:
-        contents = f.read()
-    return contents
+@app.route('/'+app.config['UPLOAD_FOLDER']+'/<filename>')
+def get_user_data(filename):
+    with app.open_resource(safe_join(app.config['UPLOAD_FOLDER'], filename)) as f:
+        return f.read()
+
+@app.route('/'+app.config['TEMP_FOLDER']+'/<filename>')
+def get_temp_data(filename):
+    with app.open_resource(safe_join(app.config['TEMP_FOLDER'], filename)) as f:
+        return f.read()
+
+@app.route('/glitch')
+def glitch():
+    return render_template('glitch.html')
+

@@ -1,4 +1,6 @@
 __pycache__/
+user_data/
+user_temp/
 .ruby-version
 *.pyc
 .DS_STORE

@@ -10,7 +10,7 @@
   -moz-box-sizing: border-box;
   box-sizing: border-box; }
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6, p {
   margin-top: 0; }
 
 html, body {
@@ -21,17 +21,17 @@ html, body {
 html {
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
-  background: #286fff; }
+  background: #4100FD; }
 
 body {
   padding-top: 52px;
-  font: 16px "Source Sans Pro", "Helvetica", "Arial", sans-serif; }
+  font: 16px "Roboto", "Helvetica", "Arial", sans-serif; }
 
 a, a:visited {
   text-decoration: none;
-  color: #286fff; }
+  color: #4100FD; }
   a:hover, a:visited:hover {
-    color: rgba(40, 111, 255, 0.5); }
+    color: rgba(65, 0, 253, 0.5); }
 
 h1, h2, h3, h4, h5, h6 {
   font-weight: 300; }
@@ -42,7 +42,7 @@ h1, h2, h3, h4, h5, h6 {
   height: 52px;
   position: fixed;
   padding: 16px;
-  background: #286fff;
+  background: rgba(40, 255, 156, 0.85);
   width: 100%;
   margin: 0;
   list-style-type: none; }
@@ -59,11 +59,9 @@ h1, h2, h3, h4, h5, h6 {
   flex-direction: column; }
 
 .wrapper {
-  width: 100%;
   max-width: 640px;
   height: 100%;
   list-style-type: none;
-  padding: 16px;
   margin: 0 auto; }
 
 .header {
@@ -78,8 +76,8 @@ h1, h2, h3, h4, h5, h6 {
   position: fixed;
   width: 100%;
   text-decoration: none;
-  background-color: #286fff;
-  color: #c1d5ff; }
+  background-color: #4100FD;
+  color: #b297ff; }
   .header h1 {
     margin: 0;
     font-size: 1em; }
@@ -89,21 +87,53 @@ h1, h2, h3, h4, h5, h6 {
       text-decoration: underline; }
   .header .logo {
     padding: 16px;
-    color: #286fff;
-    background-color: #f3f3f3;
+    color: white;
+    background-color: #3700d4;
     display: block;
     float: left; }
+    .header .logo:visited {
+      color: white; }
   .header .user-things {
     padding: 16px; }
 
-.profile-head {
-  text-align: center; }
-  .profile-head .profile-avatar {
-    width: 100%;
-    max-height: 256px;
-    object-fit: cover; }
+.profile-grid {
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex: 1 auto;
+  justify-content: center;
+  justify-items: center; }
+  .profile-grid img {
+    flex: 1 auto;
+    width: auto;
+    height: auto;
+    display: block; }
 
-.inputs input {
+.profile-head {
+  margin-top: 32px;
+  margin-bottom: 16px;
+  background-color: none;
+  color: white;
+  text-align: center; }
+  .profile-head .profile-name {
+    font-size: 96px;
+    color: white;
+    margin-bottom: 0;
+    text-transform: uppercase;
+    letter-spacing: -3px;
+    font-weight: 300;
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.15); }
+  .profile-head .profile-avatar {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    height: 384px; }
+
+.inputs input, .inputs button {
   font-weight: 400;
   background: none;
   border: 0px;
@@ -121,11 +151,32 @@ h1, h2, h3, h4, h5, h6 {
   outline: 0px;
   border-bottom: 1px solid #333; }
 
-input[type="button"], input[type="submit"] {
+.inputs button, input[type="submit"] {
   margin-top: 16px;
-  background-color: #286fff;
+  background-color: #4100FD;
   color: white;
   line-height: 2; }
+
+.inputs button {
+  background-color: #ccc;
+  color: #999; }
+
+input[type="range"] {
+  border: 0;
+  -webkit-appearance: none; }
+
+input[type="range"]::-webkit-slider-runnable-track {
+  background: #4100FD;
+  height: 2px; }
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  border: none;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  margin-top: -6px;
+  background: #4100FD; }
 
 .posts ul {
   margin: 0;
@@ -137,8 +188,6 @@ input[type="button"], input[type="submit"] {
     display: flex;
     flex-direction: column;
     padding: 16px;
-    background-color: white;
-    box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.15);
     margin-bottom: 16px; }
     .posts ul li.post h2 {
       line-height: 1.5;
@@ -150,10 +199,22 @@ input[type="button"], input[type="submit"] {
   display: flex;
   align-items: center;
   margin-bottom: 8px;
-  color: #ccc; }
+  color: #ccc;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 8px; }
   .post-head a.profile-link {
     display: flex;
     align-items: center; }
+  .post-head a.delete {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: white;
+    color: #4100FD;
+    margin-left: 4px; }
+    .post-head a.delete:hover {
+      background: #4100FD;
+      color: white; }
 
 .post-body {
   flex: 1 auto; }
@@ -181,6 +242,84 @@ input[type="button"], input[type="submit"] {
   animation-fill-mode: both;
   -webkit-animation-timing-function: ease;
   animation-timing-function: ease; }
+
+.cam-wrapper {
+  z-index: 5;
+  width: 100%;
+  background-color: transparent;
+  overflow: hidden;
+  height: 0;
+  transition: all 2500ms;
+  display: flex; }
+
+.cam-wrapper.is-active {
+  background-color: rgba(65, 0, 253, 0.85);
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; }
+  .cam-wrapper.is-active .cam {
+    opacity: 1; }
+
+.cam {
+  transition: opacity 2500ms;
+  display: flex;
+  width: 100%;
+  opacity: 0;
+  max-width: 640px; }
+
+.canvas-wrapper {
+  position: relative; }
+
+.download-link {
+  background-color: rgba(65, 0, 253, 0.25);
+  height: 100%;
+  max-width: 100%;
+  font-family: monospace;
+  letter-spacing: 12px;
+  color: white;
+  position: absolute;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; }
+  .download-link .infodisplay {
+    max-width: 100%;
+    padding: 16px; }
+
+.download-link {
+  display: none; }
+  .download-link.is-active {
+    display: flex; }
+
+#import-input {
+  display: none; }
+
+.formwrapper {
+  display: flex;
+  align-items: stretch;
+  flex-direction: row; }
+
+input.control-number {
+  display: none; }
+
+#postdatimgdata[value=""] {
+  display: none; }
+
+.control-wrapper {
+  padding: 4px;
+  border-right: 0;
+  width: 100%;
+  margin-top: 16px; }
+  .control-wrapper input:active, .control-wrapper input:focus {
+    border: 0; }
+  .control-wrapper .control-label {
+    text-align: center;
+    display: block;
+    color: #4100FD; }
 
 @-webkit-keyframes fadeInDown {
   0% {

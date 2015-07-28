@@ -1,0 +1,51 @@
+<div class="formwrapper inputs">
+    <button id="cam-button" class="button" title="Take a photo">
+    {% if g.user == user %}
+        Capture Your Personal Brand Image
+    {% else %}
+        Influence Others…
+    {% endif %}
+    </button>
+    <!-- <button id="export-button" class="button" title="save image to your computer">download image</button> -->
+</div>
+
+<div class="canvas-wrapper">
+    <canvas id="canvas" height="0" width="0"></canvas>
+</div>
+
+<div id="controls" class="formwrapper inputs">
+    <div class="control-wrapper">
+        <label class="control-label" for="amount-slider">AMT</label>
+        <input class="control-input control-number" id="amount-number" type="number" min="0" max="99" value="50" maxlength="2" />
+        <input class="control-input control-slider" id="amount-slider" type="range" min="0" max="99" value="50" step="1" maxlength="2" />
+    </div>
+    <div class="control-wrapper">
+        <label class="control-label" for="seed-slider">SED</label>
+        <input class="control-input control-number" id="seed-number" type="number" min="0" max="100" value="50" maxlength="2" />
+        <input class="control-input control-slider" id="seed-slider" type="range" min="0" max="100" value="50" step="1" maxlength="2" />
+    </div>
+    <div class="control-wrapper">
+        <label class="control-label" for="iterations-slider">ITR</label>
+        <input class="control-input control-number" id="iterations-number" type="number" min="1" max="50" value="5" maxlength="2" />
+        <input class="control-input control-slider" id="iterations-slider" type="range" min="1" max="50" value="5" step="1" maxlength="2"/>
+    </div>
+    <div class="control-wrapper">
+        <label class="control-label" for="quality-slider">QLT</label>
+        <input class="control-input control-number" id="quality-number" type="number" min="1" max="99" value="50" maxlength="2" />
+        <input class="control-input control-slider" id="quality-slider" type="range" min="1" max="99" value="50" step="1" maxlength="2" />
+    </div>
+
+</div>
+<div class="formwrapper inputs">
+    <button id="random-button" class="button is-hidden">Apply Aesthetics</button>
+</div>
+
+<p class="formwrapper">
+    <p id="infodisplay" class="infodisplay"></p>
+    <form class="inputs" id="post" action="{{url_for('post', username=user.username)}}" method="post" enctype="multipart/form-data">
+        <div><input type="text" name="input_message" size="80" placeholder="Tell us how you really feel…"/></div>
+        <div><input type="text" value="" name="image_data" id="postdatimgdata"></div>
+        <div><input type="file" name="input_file" multiple=""/></div>
+        <input type="submit" value="Post Dat" id="export-button"/>
+    </form>
+</p>
