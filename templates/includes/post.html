@@ -14,13 +14,7 @@
     {% if post.attachments %}
         <div class="attachments">
             {% for attachment in post.attachments %}
-                <a href="
-                {% if g.user == user %}
-                    {{url_for('new_avatar', id=attachment.file.id )}}
-                {% else %}
-                    #
-                {% endif %}
-                "> 
+                <a href="{{url_for('new_avatar', id=attachment.file.id )}}"> 
                     <img class="attachment" src="{{ url_for('get_user_data', filename=attachment.file.filename)}}"/>
                 </a>
             {% endfor %}

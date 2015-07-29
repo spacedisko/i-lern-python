@@ -7,6 +7,7 @@ from werkzeug import check_password_hash, generate_password_hash
 import werkzeug.security
 from datetime import datetime
 import base64
+from threading import Thread
 import urllib.request
 import uuid
 
@@ -37,7 +38,6 @@ TEMP_FOLDER = 'user_temp'
 
 
 app = Flask(__name__, static_folder='static')
-
 
 app.secret_key = 'jEw9iS6A3qUeg4oYl7Nel0rud2ceFf2anS4oT6vO9hiv1p'
 # space between variable and square brack isnt a good idea
@@ -142,22 +142,32 @@ class User(db.Model):
     password = db.Column(db.String(50))
     email = db.Column(db.String(0), index=True, unique=True)
     verified = db.Column(db.Boolean)
-    verification_code = db.Column(db.String(40))
+    verification_code = db.Column(db.String(48))
     join_date = db.Column(db.DateTime)
 
     avatar_id = db.Column(db.Integer, db.ForeignKey('file.id'))
     avatar = db.relationship('File', foreign_keys="User.avatar_id")
 
-    def __init__(self, username, password, email, verification_code=None, join_date=None, verified=0):
+    def __init__(self, username, password, email, verification_code=None, join_date=None, verified=False):
+
         self.username = username
         self.password = password
         self.email = email
-        self.verification_code = str(uuid.uuid4().hex)
+        self.verification_code = self.make_verication_code()
         self.join_date = ensure_date(join_date)
         self.verified = verified
 
-    def verify(self, email, code):
-        pass
+    def verify_user(self, check_code):
+        if check_code == self.verification_code:
+            self.verified = True
+            self.verification_code = self.make_verication_code()
+            db.session.add(self)
+            db.session.commit()
+            return True
+        else:
+            return False
+    def make_verication_code(self):
+        return str(uuid.uuid4().hex)
 
     @classmethod
     def get_by_username(cls, username):  
@@ -211,6 +221,27 @@ class Attachment(db.Model):
     def __repr__(self):
         return'<Attachment %r on %r>' % (self.file, self.post)
 
+def async(f):
+    def wrapper(*args, **kwargs):
+        thr = Thread(target=f, args=args, kwargs=kwargs)
+        thr.start()
+    return wrapper
+
+@async
+def send_email(subject, sender, recipients, text_body, html_body):
+    with app.app_context():
+        msg = Message(subject, sender=sender, recipients=recipients)
+        msg.body = text_body
+        msg.html = html_body
+        mail.send(msg)
+
+def verification_email(user):
+    send_email("PostR: %s, please confirm your account" % user.email,
+               'postr@postr.postr',
+               [user.email],
+               'http://localhost:5000/mail?confirm=%s&code=%s' % (user.email, user.verification_code),
+               render_template("emails/_email_confirmation.html", user=user))
+
 @app.before_request
 def before_request():
     g.user_data = USER_FOLDER
@@ -228,19 +259,18 @@ def home():
     if request.method == 'POST':
         user_input = request.form.get('username', '')
         user_input_pass = request.form.get('password', '')
-        if user_input is not None:
-            get_user = User.get_by_username(user_input)
-            print(get_user)
-            login_ok = (check_password_hash(get_user.password, user_input_pass)) and get_user.verified is True
-            print(get_user.verified)
-            if login_ok:
+        user = User.get_by_username(user_input)
+        if user_input is not None and user is not None:
+            login_ok = (check_password_hash(user.password, user_input_pass))
+            if login_ok and user.verified is True:
+                print(user)
                 session['username'] = user_input
                 flash("ORIGHT YEH. Logged in as %s" % user_input)
-                return redirect(url_for('dashboard', username=get_user.username))
-
-            elif get_user.verified is False:
-                print('MATE CMON')
+                return redirect(url_for('dashboard', username=user.username))
+            elif login_ok and user.verified is False:
                 flash("You need to confirm your email…")
+            else:
+                flash("Incorrect username or password.")
         else:
             flash("Incorrect username or password.")
     return render_template('login.html', form=request.form)
@@ -266,7 +296,7 @@ def register():
                         )
         db.session.add(new_user)
         db.session.commit()
-        # escape here too. id do like username = html.escape(request.form[...])salt=app.secret_key
+        verification_email(new_user)
         flash("An email has been sent to %s — You need to verify before signing in" % new_user.email )
         return redirect(url_for('home'))
 
@@ -361,17 +391,19 @@ def glitch():
     return render_template('glitch.html')
 
 @app.route('/mail', methods=['GET'])
-def mail():
+def email_handler():
     # http://localhost:5000/mail?confirm=blah@blah.com&code=12314823812038129381208319
-
     if request.method == 'GET':
-        email_get = request.args.get('confirm')
+        if g.user:
+            session.pop('username', None)
+        user_get = request.args.get('confirm')
         code_get = request.args.get('code')
+        if code_get and user_get:
 
-        if code_get:
-            flash('Email Confirmed')
-            return redirect(url_for('home'))
+            user = User.get_by_username(user_get)
+            if user.verify_user(code_get):
+                flash("You can now sign in as %s" %user.username)
+            else:
+                flash("Nope!")
+        return redirect(url_for('home'))
 
-    # msg = Message("Hello",sender="from@postr.com", recipients=["test@test.test"])
-    # mail.send(msg)
-    return email_get
